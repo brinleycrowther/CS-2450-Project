@@ -1,0 +1,33 @@
+CS 2450 Meeting Report - Week 1
+1/16/2025
+
+In Attendance:
+	Spencer Rohwer
+	Agustin Suarez Berios
+	Owen Rasor
+	Brinley Crowther
+
+Agenda & Notes:
+•	List of Team Members
+    o	Spencer Rohwer
+    o	Agustin Suarez Berios
+    o	Owen Rasor
+    o	Brinley Crowther
+•	Proposed Meeting Schedule
+•	Schedule of Scrum Masters
+•	Programming Language
+•	Source Control
+•	Project Management 
+
+Action Items Assigned:
+•	Everyone:
+    o	Get more familiar with GitHub.
+    o	Review instructions for Milestone 2.
+•	Owen:
+    o	Make a mock draft of things to go over next week.
+•	Brinley:
+    o	Create GitHub Repo for project source control/management.
+•	Spencer:
+    o	Keep and maintain weekly meeting notes and follow up with team members.
+•	Agustin:
+    o	Reach out to professor to receive the final milestone specs.
