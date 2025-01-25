@@ -8,14 +8,16 @@ UVSim class tracks execution log and memory. It processes each word, logs it, br
 to specific state in memory, and can be reset and saved. Both memory and execustion log can be inspected by user.
 '''
 from accumulator import Accumulator
+from pathlib import Path # used to check if file is in path
 
 class UVSim:
-
     def __init__(self, file=""):
         self.file = file
-        self.accum = Accumulator(self.memory)
         self.log = [] # tracks log of program
+        self.state = 0 # where program counter will continue
         self.memory = {i: 0 for i in range(100)} # tracks and updates memory location. e.g. 00: +1234
+        self.accum = Accumulator(self.memory)
+        self.record = True
 
     # grabs word from file, splits sign, splits first two digits(function) from last two digits(value)
     # uses accumulator functions to process the word
@@ -24,8 +26,12 @@ class UVSim:
         if self.file == "":
             self.file = input("Which file would you like to run?\n")
             self.wordProcess()
-        elif (self.file[-4] + self.file[-3] + self.file[-2] + self.file[-1]) != ".txt":
+        elif (self.file[-4] + self.file[-3] + self.file[-2] + self.file[-1]) != ".txt": # makes sure file is a .txt
             print("File type invalid.")
+            self.file = input("Which file would you like to run?\n")
+            self.wordProcess()
+        elif Path(self.file).exists() == False: # makes sure file is in path
+            print("File does not exist in folder.")
             self.file = input("Which file would you like to run?\n")
             self.wordProcess()
         else:
@@ -34,7 +40,7 @@ class UVSim:
                 words = file.readlines()
                 for word in words:
                     lineNum += 1 # increments line number for each word
-                    if len(word) != 6 or len(word) != 5: # ensures each line has a sign, operation, and memory location (+ new line)
+                    if len(word) != 6 and len(word) != 5: # ensures each line has a sign, operation, and memory location (+ new line)
                         print(f'Word invalid on line {lineNum}')
                         break
                     else:
@@ -71,56 +77,91 @@ class UVSim:
                         elif operation == "42":
                             self.branchzero(location)
                         elif operation == "43":
-                            self.halt()
+                            print("Program halted.")
+                            self.log.append("Program halted")
+                            break
                         else:
                             print(f'Word on line {lineNum} contains OpCode that does not exist.')
                             break
+                        
+                        # adds word to memory based on where program counter is
+                        self.memory[self.state] = word.strip('\n')
+                        if self.record == True: # moves the program counter to the next space in memory if branch is not skipped over
+                            self.state += 1
+                        else:
+                            self.record = True # branch skipped over, does not increment state, but resets self.record
 
 
     # 40.. jumps to specified state in memory(value) and starts counter
     def branch(self, value):
-        pass
+        self.state = int(value)
+        self.log.append(f'Program branch to {value}')
+        return self.state
 
     # 41.. jumps to specified state in memory(value) if accumulator is negative and starts counter
     def branchneg(self, value):
-        pass
+        if self.accum.currVal < 0:
+            self.state = int(value)
+            self.log.append(f'Program branch to {value}')
+        else:
+            self.record = False
+        return self.state
     
     # 42.. jumps to specified state in memory(value) if accumulator is zero and starts counter
     def branchzero(self, value):
-        pass
-
-    # stops program counter
-    def halt(self, value):
-        pass
+        if self.accum.currVal == 0:
+            self.state = int(value)
+            self.log.append(f'Program branch to {value}')
+        else:
+            self.record = False
+        return self.state
 
     # fetches current state of accumulator. currVal, current instruction, and program counter
     def inspectCurrent(self):
-        pass
+        curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nCurrent instruction: {self.memory[self.state - 1]}\nProgram counter: {self.state}'
+        return curr
 
     # displays all memory content. eg 00: +1234
     def inspectMemory(self):
-        pass
+        for location, value in self.memory.items():
+            if location < 10:
+                print(f'0{location}: {value}')
+            else:
+                print(f'{location}: {value}')
 
     # displays log
     def logDisplay(self):
-        pass
-
-    # writes memory accumulator, and counter values into .txt file
-    def saveState(self):
-        pass
+        print("Program log:")
+        for item in self.log:
+            print(item)
+        return self.log
     
-    # sets self.file to file specified
-    def loadState(self):
-        pass
+    # shows accumulator state
+    def displayAccumulator(self):
+        return f'Accumulator: {self.accum.currVal}'
+    
+    # outputs accumulator value and memory into .txt file
+    def saveState(self):
+        fileSave = input("File name:\n")
 
-    # resets accumulator to 0 and memory to 00
-    def reset(self):
-        pass
+        if fileSave[-4] != '.':
+            fileSave += ".txt"
 
+        with open(fileSave, 'w') as file:
+            file.write("UVSim Program\n\n")
+            file.write(f'Accumulator: {self.accum.currVal}\n\n')
+            file.write(f'Memory:\n')
+            for location, value in self.memory.items():
+                if location < 10:
+                    file.write(f'0{location}: {value}\n')
+                else:
+                    file.write(f'{location}: {value}\n')
 def main():
     inputFile = input("Which file would you like to run?\n") # asks for file to load
-    program = UVSim()
+    program = UVSim(inputFile)
     program.wordProcess()
+    program.inspectMemory()
+    program.saveState()
 
 if __name__ == '__main__':
     main()
