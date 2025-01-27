@@ -83,14 +83,6 @@ class UVSim:
                         else:
                             print(f'Word on line {lineNum} contains OpCode that does not exist.')
                             break
-                        
-                        # adds word to memory based on where program counter is
-                        self.memory[self.state] = word.strip('\n')
-                        if self.record == True: # moves the program counter to the next space in memory if branch is not skipped over
-                            self.state += 1
-                        else:
-                            self.record = True # branch skipped over, does not increment state, but resets self.record
-
 
     # 40.. jumps to specified state in memory(value) and starts counter
     def branch(self, value):
@@ -161,6 +153,7 @@ def main():
     program = UVSim(inputFile)
     program.wordProcess()
     program.inspectMemory()
+    program.logDisplay()
     program.saveState()
 
 if __name__ == '__main__':
