@@ -79,10 +79,18 @@ class UVSim:
                         elif operation == "43":
                             print("Program halted.")
                             self.log.append("Program halted")
+                            self.memory[self.state] = word.strip('\n')
                             break
                         else:
                             print(f'Word on line {lineNum} contains OpCode that does not exist.')
                             break
+                        
+                        if self.record == True:
+                            self.memory[self.state] = word.strip('\n')
+                            self.state += 1
+                        else:
+                            self.record = True
+
 
     # 40.. jumps to specified state in memory(value) and starts counter
     def branch(self, value):
