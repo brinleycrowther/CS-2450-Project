@@ -55,21 +55,27 @@ class UVSim:
 
                         # takes OpCode and passes location and sign of word to its function
                         if operation == "10":
-                            self.accum.read(location, sign)
+                            self.log.append(f'{self.accum.read(location, sign)} read into {location} in memory')
                         elif operation == "11":
-                            self.accum.write(location, sign)
+                            self.log.append(f'{self.accum.write(location, sign)} output from {location} in memory onto screen')
                         elif operation == "20":
                             self.accum.load(location, sign)
+                            self.log.append(f'{self.memory[int(location)]} loaded into accumulator')
                         elif operation == "21":
                             self.accum.store(location, sign)
+                            self.log.append(f'{self.memory[int(location)]} stored into {location} in memory')
                         elif operation == "30":
                             self.accum.add(location, sign)
+                            self.log.append(f'Accumulator added to {self.memory[int(location)]} from {location} in memory')
                         elif operation == "31":
                             self.accum.subtract(location, sign)
+                            self.log.append(f'Accumulator subtracted from {self.memory[int(location)]} from {location} in memory')
                         elif operation == "32":
                             self.accum.divide(location, sign)
+                            self.log.append(f'Accumulator divded by {self.memory[int(location)]} from {location} in memory')
                         elif operation == "33":
                             self.accum.multiply(location, sign)
+                            self.log.append(f'Accumulator multiplied by {self.memory[int(location)]} from {location} in memory')
                         elif operation == "40":
                             self.branch(location)
                         elif operation == "41":
