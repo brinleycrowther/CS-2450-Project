@@ -5,26 +5,23 @@ class Accumulator:
        self.currVal = 0
        self.memory = memory
 
-    # 10.. READS word from input and puts into specifiec memory location(loc)
     def read(self, loc, sign):
-        invalid_input = True
-        while invalid_input:
-            input_word = str(input('Enter word: '))
-            if (input_word[0] != '+' and input_word[0] != '-') and len(input_word) != 4:
-            #if len(input_word) > 6 or len(input_word) < 5: # ensures each line has a sign, operation, and memory location (+ new line)
-                print(f'Invalid word')
-            elif (input_word[0] == '+' or input_word[0] == '-') and len(input_word) != 5:
-                print(f'Invalid word')
-            else:
-                invalid_input = False
-                if input_word[0] == '+' or input_word[0] == '-':
-                    #print(f"Putting word {input_word} in location {int(loc)}; type of loc: {type(loc)}")
-                    self.memory[int(loc)] = input_word
-                    return input_word
+        while True:
+            input_word = input("Enter word: ").strip()
 
-                else: # we can assume word is positive if not specified
-                    self.memory[int(loc)] = f"+{input_word}"
-                    return input_word
+            # Check for sign followed by four numbers
+            if input_word.startswith(("+", "-")) and len(input_word) == 5 and input_word[1:].isdigit():
+                break
+            # Check for four numbers
+            elif len(input_word) == 4 and input_word.isdigit():
+                input_word = f"+{input_word}"  # Assume positive if no sign given
+                break
+            else:
+                print("Invalid word")
+
+        # Store the valid input into memory
+        self.memory[int(loc)] = input_word
+        return input_word
 
     #11.. WRITES word from specified location in memory(loc) and outputs it to screen
     def write(self, loc, sign):
