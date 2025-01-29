@@ -39,8 +39,9 @@ class UVSim:
             with open(self.file, 'r') as file: # reads file
                 words = file.readlines()
                 for word in words:
+                    word = word.strip('\n')
                     lineNum += 1 # increments line number for each word
-                    if len(word) != 6 and len(word) != 5: # ensures each line has a sign, operation, and memory location (+ new line)
+                    if len(word) != 5 and len(word) != 4: # ensures each line has a sign, operation, and memory location (+ new line)
                         print(f'Word invalid on line {lineNum}')
                         break
                     else:
@@ -55,27 +56,27 @@ class UVSim:
 
                         # takes OpCode and passes location and sign of word to its function
                         if operation == "10":
-                            self.log.append(f'{self.accum.read(location, sign)} read into {location} in memory')
+                            self.log.append(f'{word} : {self.accum.read(location, sign)} read into {location} in memory')
                         elif operation == "11":
-                            self.log.append(f'{self.accum.write(location, sign)} output from {location} in memory onto screen')
+                            self.log.append(f'{word} : {self.accum.write(location, sign)} output from {location} in memory onto screen')
                         elif operation == "20":
                             self.accum.load(location, sign)
-                            self.log.append(f'{self.memory[int(location)]} loaded into accumulator')
+                            self.log.append(f'{word} : {self.memory[int(location)]} loaded into accumulator')
                         elif operation == "21":
                             self.accum.store(location, sign)
-                            self.log.append(f'{self.memory[int(location)]} stored into {location} in memory')
+                            self.log.append(f'{word} : {self.memory[int(location)]} stored into {location} in memory')
                         elif operation == "30":
                             self.accum.add(location, sign)
-                            self.log.append(f'Accumulator added to {self.memory[int(location)]} from {location} in memory')
+                            self.log.append(f'{word} : Accumulator added to {self.memory[int(location)]} from {location} in memory')
                         elif operation == "31":
                             self.accum.subtract(location, sign)
-                            self.log.append(f'Accumulator subtracted from {self.memory[int(location)]} from {location} in memory')
+                            self.log.append(f'{word} : Accumulator subtracted from {self.memory[int(location)]} from {location} in memory')
                         elif operation == "32":
                             self.accum.divide(location, sign)
-                            self.log.append(f'Accumulator divded by {self.memory[int(location)]} from {location} in memory')
+                            self.log.append(f'{word} : Accumulator divded by {self.memory[int(location)]} from {location} in memory')
                         elif operation == "33":
                             self.accum.multiply(location, sign)
-                            self.log.append(f'Accumulator multiplied by {self.memory[int(location)]} from {location} in memory')
+                            self.log.append(f'{word} : Accumulator multiplied by {self.memory[int(location)]} from {location} in memory')
                         elif operation == "40":
                             self.branch(location)
                         elif operation == "41":
@@ -84,15 +85,15 @@ class UVSim:
                             self.branchzero(location)
                         elif operation == "43":
                             print("Program halted.")
-                            self.log.append("Program halted")
-                            self.memory[self.state] = word.strip('\n')
+                            self.log.append(f'{word} : Program halted')
+                            self.memory[self.state] = word
                             break
                         else:
                             print(f'Word on line {lineNum} contains OpCode that does not exist.')
                             break
                         
                         if self.record == True:
-                            self.memory[self.state] = word.strip('\n')
+                            self.memory[self.state] = word
                             self.state += 1
                         else:
                             self.record = True
@@ -101,14 +102,14 @@ class UVSim:
     # 40.. jumps to specified state in memory(value) and starts counter
     def branch(self, value):
         self.state = int(value)
-        self.log.append(f'Program branch to {value}')
+        self.log.append(f'40{value} : Program branch to {value}')
         return self.state
 
     # 41.. jumps to specified state in memory(value) if accumulator is negative and starts counter
     def branchneg(self, value):
         if self.accum.currVal < 0:
             self.state = int(value)
-            self.log.append(f'Program branch to {value}')
+            self.log.append(f'41{value} : Program branch to {value}')
         else:
             self.record = False
         return self.state
@@ -117,7 +118,7 @@ class UVSim:
     def branchzero(self, value):
         if self.accum.currVal == 0:
             self.state = int(value)
-            self.log.append(f'Program branch to {value}')
+            self.log.append(f'42{value} : Program branch to {value}')
         else:
             self.record = False
         return self.state
@@ -148,10 +149,17 @@ class UVSim:
     
     # outputs accumulator value and memory into .txt file
     def saveState(self):
-        fileSave = input("File name:\n")
+        inputInvalid = True
+        while inputInvalid:
+            fileSave = input("Save as:\n")
 
-        if fileSave[-4] != '.':
-            fileSave += ".txt"
+            if fileSave == '':
+                print('Input invalid.')
+            elif fileSave[-4] != '.':
+                inputInvalid = False
+                fileSave += ".txt"
+            else:
+                inputInvalid = False
 
         with open(fileSave, 'w') as file:
             file.write("UVSim Program\n\n")
@@ -162,6 +170,7 @@ class UVSim:
                     file.write(f'0{location}: {value}\n')
                 else:
                     file.write(f'{location}: {value}\n')
+
 def main():
     inputFile = input("Which file would you like to run?\n") # asks for file to load
     program = UVSim(inputFile)
