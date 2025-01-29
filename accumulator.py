@@ -20,14 +20,26 @@ class Accumulator:
                 if input_word[0] == '+' or input_word[0] == '-':
                     #print(f"Putting word {input_word} in location {int(loc)}; type of loc: {type(loc)}")
                     self.memory[int(loc)] = input_word
+<<<<<<< HEAD
 
                 else: # we can assume word is positive if not specified
                     self.memory[int(loc)] = f"+{input_word}"
+=======
+                    return input_word
+
+                else: # we can assume word is positive if not specified
+                    self.memory[int(loc)] = f"+{input_word}"
+                    return input_word
+>>>>>>> 99eff31 (accumulator.py updated with return values to be used in uvsim.py)
 
     #11.. WRITES word from specified location in memory(loc) and outputs it to screen
     def write(self, loc, sign):
         print(self.memory[int(loc)])
         #print(f"11: writes {self.memory[int(loc)]} from {int(loc)} to screen")
+<<<<<<< HEAD
+=======
+        return self.memory[int(loc)]
+>>>>>>> 99eff31 (accumulator.py updated with return values to be used in uvsim.py)
 
     # 20.. LOADS word from specific location in memory(loc) into accumulator
     def load(self, loc, sign):
