@@ -5,7 +5,7 @@ It uses four digit numbers to interpret and execute these operations.
 Accumulator object instantiated in each instance of UVSim.
 File passed as a string parameter into instance of UVSim.
 UVSim class tracks execution log and memory. It processes each word, logs it, branches
-to specific state in memory, and can be reset and saved. Both memory and execustion log can be inspected by user.
+to specific state in memory, and can be reset and saved. Both memory and execution log can be inspected by user.
 '''
 from accumulator import Accumulator
 from pathlib import Path # used to check if file is in path
@@ -15,7 +15,7 @@ class UVSim:
         self.file = file
         self.log = [] # tracks log of program
         self.state = 0 # where program counter will continue
-        self.memory = {i: 0 for i in range(100)} # tracks and updates memory location. e.g. 00: +1234
+        self.memory = {i: "0000" for i in range(100)} # tracks and updates memory location. e.g. 00: +1234
         self.accum = Accumulator(self.memory)
         self.record = True
 
@@ -70,7 +70,7 @@ class UVSim:
                             self.log.append(f'{word} : Accumulator added to {self.memory[int(location)]} from {location} in memory')
                         elif operation == "31":
                             self.accum.subtract(location, sign)
-                            self.log.append(f'{word} : Accumulator subtracted from {self.memory[int(location)]} from {location} in memory')
+                            self.log.append(f'{word} : Accumulator subtracted by {self.memory[int(location)]} from {location} in memory')
                         elif operation == "32":
                             self.accum.divide(location, sign)
                             self.log.append(f'{word} : Accumulator divded by {self.memory[int(location)]} from {location} in memory')
@@ -125,7 +125,10 @@ class UVSim:
 
     # fetches current state of accumulator. currVal, current instruction, and program counter
     def inspectCurrent(self):
-        curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nCurrent instruction: {self.memory[self.state - 1]}\nProgram counter: {self.state}'
+        if self.state == 0:
+            curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nCurrent instruction: {self.memory[self.state]}\nProgram counter: {self.state}'
+        else:
+            curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nCurrent instruction: {self.memory[self.state - 1]}\nProgram counter: {self.state}'
         return curr
 
     # displays all memory content. eg 00: +1234

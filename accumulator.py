@@ -1,9 +1,12 @@
-'''Accumulator class. Tracks and calculates arithemitic operations'''
+'''Accumulator class. Tracks and calculates arithmetic operations'''
 
 class Accumulator:
-    def __init__(self, memory):
-       self.currVal = 0
-       self.memory = memory
+    def __init__(self, memory=None):
+        self.currVal = 0
+        if memory is None:
+           self.memory = {i:"0000" for i in range(100)}
+        else:
+            self.memory = memory
 
     def read(self, loc, sign):
         while True:
