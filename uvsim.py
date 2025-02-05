@@ -14,7 +14,8 @@ class UVSim:
     def __init__(self, file=""):
         self.file = file
         self.log = [] # tracks log of program
-        self.state = 0 # where program counter will continue
+        self.memSpace = 0 # where program counter will continue
+        self.counter = 0 # tracks where in what word is being processed in memory
         self.memory = {i: "0000" for i in range(100)} # tracks and updates memory location. e.g. 00: +1234
         self.accum = Accumulator(self.memory)
         self.record = True
@@ -41,94 +42,86 @@ class UVSim:
                 for word in words:
                     word = word.strip('\n')
                     lineNum += 1 # increments line number for each word
-                    if len(word) != 5 and len(word) != 4: # ensures each line has a sign, operation, and memory location (+ new line)
-                        print(f'Word invalid on line {lineNum}')
-                        break
-                    else:
-                        if word[0] == '+' or word[0] == '-':
-                            sign = word[0] # sign is first char in word
-                            operation = word[1] + word[2] # operation is next two chars
-                            location = word[3] + word[4] # location in memory is last two chars
-                        else: # we can assume word is positive if not specified
-                            sign = '+'
-                            operation = word[0] + word[1]
-                            location = word[2] + word[3]
 
-                        # takes OpCode and passes location and sign of word to its function
-                        if operation == "10":
-                            self.log.append(f'{word} : {self.accum.read(location, sign)} read into {location} in memory')
-                        elif operation == "11":
-                            self.log.append(f'{word} : {self.accum.write(location, sign)} output from {location} in memory onto screen')
-                        elif operation == "20":
-                            self.accum.load(location, sign)
-                            self.log.append(f'{word} : {self.memory[int(location)]} loaded into accumulator')
-                        elif operation == "21":
-                            self.accum.store(location, sign)
-                            self.log.append(f'{word} : {self.memory[int(location)]} stored into {location} in memory')
-                        elif operation == "30":
-                            self.accum.add(location, sign)
-                            self.log.append(f'{word} : Accumulator added to {self.memory[int(location)]} from {location} in memory')
-                        elif operation == "31":
-                            self.accum.subtract(location, sign)
-                            self.log.append(f'{word} : Accumulator subtracted by {self.memory[int(location)]} from {location} in memory')
-                        elif operation == "32":
-                            self.accum.divide(location, sign)
-                            self.log.append(f'{word} : Accumulator divded by {self.memory[int(location)]} from {location} in memory')
-                        elif operation == "33":
-                            self.accum.multiply(location, sign)
-                            self.log.append(f'{word} : Accumulator multiplied by {self.memory[int(location)]} from {location} in memory')
-                        elif operation == "40":
-                            self.branch(location)
-                        elif operation == "41":
-                            self.branchneg(location)
-                        elif operation == "42":
-                            self.branchzero(location)
-                        elif operation == "43":
-                            print("Program halted.")
-                            self.log.append(f'{word} : Program halted')
-                            self.memory[self.state] = word
-                            break
-                        else:
-                            print(f'Word on line {lineNum} contains OpCode that does not exist.')
-                            break
-                        
-                        if self.record == True:
-                            self.memory[self.state] = word
-                            self.state += 1
-                        else:
-                            self.record = True
+                    # loads each word into corresponding memory space    
+                    self.memory[self.memSpace] = word
+                    self.memSpace += 1
+
+            # goes through each space in memory and processes the word
+            while self.counter < self.memSpace:
+                value = self.memory[self.counter]
+                self.counter += 1
+                sign = value[0] if value[0] in ('+', '-') else '+'
+                operation = value[1:3] if sign in ('+', '-') else value[:2]
+                location = value[3:] if sign in ('+', '-') else value[2:]
+
+                # takes OpCode and passes location and sign of word to its function
+                if operation == "10":
+                    self.log.append(f'{value} : {self.accum.read(location, sign)} read into {location} in memory')
+                elif operation == "11":
+                    self.log.append(f'{value} : {self.accum.write(location, sign)} output from {location} in memory onto screen')
+                elif operation == "20":
+                    self.accum.load(location, sign)
+                    self.log.append(f'{value} : {self.memory[int(location)]} loaded into accumulator')
+                elif operation == "21":
+                    self.accum.store(location, sign)
+                    self.log.append(f'{value} : {self.memory[int(location)]} stored into {location} in memory')
+                elif operation == "30":
+                    self.accum.add(location, sign)
+                    self.log.append(f'{value} : Accumulator added to {self.memory[int(location)]} from {location} in memory')
+                elif operation == "31":
+                    self.accum.subtract(location, sign)
+                    self.log.append(f'{value} : Accumulator subtracted by {self.memory[int(location)]} from {location} in memory')
+                elif operation == "32":
+                    self.accum.divide(location, sign)
+                    self.log.append(f'{value} : Accumulator divded by {self.memory[int(location)]} from {location} in memory')
+                elif operation == "33":
+                    self.accum.multiply(location, sign)
+                    self.log.append(f'{value} : Accumulator multiplied by {self.memory[int(location)]} from {location} in memory')
+                elif operation == "40":
+                    self.branch(location)
+                elif operation == "41":
+                    self.branchneg(location)
+                elif operation == "42":
+                    self.branchzero(location)
+                elif operation == "43":
+                    print("Program halted.")
+                    self.log.append(f'{value} : Program halted')
+                    break
+                else:
+                    self.log.append(f'Word: {value} in memory space {self.counter} is inoperable.')
 
 
     # 40.. jumps to specified state in memory(value) and starts counter
     def branch(self, value):
-        self.state = int(value)
+        self.counter = int(value)
         self.log.append(f'40{value} : Program branch to {value}')
-        return self.state
+        return self.memSpace
 
     # 41.. jumps to specified state in memory(value) if accumulator is negative and starts counter
     def branchneg(self, value):
         if self.accum.currVal < 0:
-            self.state = int(value)
+            self.counter = int(value)
             self.log.append(f'41{value} : Program branch to {value}')
         else:
             self.record = False
-        return self.state
+        return self.memSpace
     
     # 42.. jumps to specified state in memory(value) if accumulator is zero and starts counter
     def branchzero(self, value):
         if self.accum.currVal == 0:
-            self.state = int(value)
+            self.counter = int(value)
             self.log.append(f'42{value} : Program branch to {value}')
         else:
             self.record = False
-        return self.state
+        return self.memSpace
 
     # fetches current state of accumulator. currVal, current instruction, and program counter
     def inspectCurrent(self):
-        if self.state == 0:
-            curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nCurrent instruction: {self.memory[self.state]}\nProgram counter: {self.state}'
+        if self.memSpace == 0:
+            curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nCurrent instruction: {self.memory[self.memSpace]}\nProgram counter: {self.state}'
         else:
-            curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nCurrent instruction: {self.memory[self.state - 1]}\nProgram counter: {self.state}'
+            curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nCurrent instruction: {self.memory[self.memSpace - 1]}\nProgram counter: {self.state}'
         return curr
 
     # displays all memory content. eg 00: +1234
@@ -180,7 +173,7 @@ def main():
     program.wordProcess()
     program.inspectMemory()
     program.logDisplay()
-    program.saveState()
+    #program.saveState()
 
 if __name__ == '__main__':
     main()
