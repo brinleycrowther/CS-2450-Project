@@ -1,22 +1,19 @@
 UVSim Command Line Guide
 ========================
+UVSim is a simulator for executing BasicML programs, designed to help students learn machine language and computer architecture.
 
 Prerequisites:
-- Python 3.6 or later (https://www.python.org/downloads/)
+- Python 3.x installed on your system.
 
 Installation:
-1. Download or clone the repository:
-   ```bash
-   git clone https://github.com/your-team/uvsim.git
+1. Ensure Python 3.x is installed.
+2. Download the UVSim files (`uvisim.py` and `accumulator.py`).
 
-Navigate to the project directory:
-- cd uvsim
-
-Usage Instructions
-1. Run the simulator:
-python uvsim.py
-2. When prompted, enter the path to your BasicML program file
-3. Follow on-screen instructions for any required input
+Usage:
+1. Open a terminal/command prompt.
+2. Navigate to the directory containing the UVSim files.
+3. Run the simulator:
+   python uvsim.py
 
 Example Session
 $ python uvsim.py
@@ -37,7 +34,8 @@ File Requirements
 Input files must:
 1. Have .txt extension
 2. Contain one 4-digit instruction per line
-3. Example valid line: +1007 or 2007
+3. Instructions must start with '+' (e.g., +1007) 
+4. Data words may use +/- (e.g., -5678) 
 
 Troubleshooting
 - "File does not exist in folder": Verify correct path
