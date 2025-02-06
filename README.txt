@@ -18,7 +18,8 @@ Usage:
 
 Example Session
 $ python uvsim.py
-Which file would you like to run? Test1.txt
+Which file would you like to run? 
+Test1.txt
 
 Enter word: +1234  # For READ at location 07
 Enter word: +5678  # For READ at location 08
