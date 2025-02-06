@@ -1,74 +1,56 @@
-UVSim - Basic Machine Language Simulator
-========================================
+UVSim Command Line Guide
+========================
 
-Description:
-UVSim is a virtual machine simulator for executing BasicML programs. 
-It was designed for computer science education and emulates a 100-word 
-memory architecture with CPU operations including I/O, arithmetic, and control flow.
+Prerequisites:
+- Python 3.6 or later (https://www.python.org/downloads/)
 
 Installation:
-1. Install: 
-   Python 3.6+ (no additional dependencies required).
-2. Clone repository:
+1. Download or clone the repository:
+   ```bash
    git clone https://github.com/your-team/uvsim.git
-3. Navigate to project:
-   cd uvsim
 
-Usage:
-1. Run simulator with:
-   python uvsim.py
-2. When prompted, enter path to BasicML file (e.g., "Test1.txt")
+Navigate to the project directory:
+- cd uvsim
 
-Sample Input Files:
-- Test1.txt: Basic program with READ/LOAD/ADD/WRITE/HALT
-- Test2.txt: Program demonstrating branching and subtraction
+Usage Instructions
+1. Run the simulator:
+python uvsim.py
+2. When prompted, enter the path to your BasicML program file
+3. Follow on-screen instructions for any required input
 
-Input Format:
-- Each instruction is a 4-digit signed decimal number.
-- Example:
-  +1007
-  +2007
-  +4300
-
-Supported Operations:
-| Opcode | Mnemonic    | Description                   |
-|--------|-------------|-------------------------------|
-| 10     | READ        | Input to memory location      |
-| 11     | WRITE       | Output from memory location   |
-| 20     | LOAD        | Mem -> Accumulator            |
-| 21     | STORE       | Accumulator -> Mem            |
-| 30     | ADD         | Accumulator += Mem            |
-| 31     | SUBTRACT    | Accumulator -= Mem            |
-| 32     | DIVIDE      | Accumulator /= Mem            |
-| 33     | MULTIPLY    | Accumulator *= Mem            |
-| 40     | BRANCH      | Unconditional jump            |
-| 41     | BRANCHNEG   | Jump if Accumulator < 0       |
-| 42     | BRANCHZERO  | Jump if Accumulator == 0      |
-| 43     | HALT        | Stop program execution        |
-
-Example Session:
+Example Session
 $ python uvsim.py
-Enter BasicML file path: Test1.txt
-READ operation - Enter a number: 5
-WRITE operation - Output: 15
-Program halted successfully
-(Note: The output value will depend on the instructions in Test1.txt.)
+Which file would you like to run? Test1.txt
 
-Project Files:
-uvsim.py: Main simulator logic
-accumulator.py: Accumulator component
-test_accumulator.py: Unit tests for accumulator
-test_uvsim.py: Unit tests for UVSim
-Test1.txt, Test2.txt: Sample BasicML programs
-uvsim-designDocument.docx: Design specifications
-.gitignore: Git ignored files list
+Enter word: 1234  # Input for first READ operation
+Enter word: 5678  # Input for second READ operation
+7902              # Program output from WRITE operation
+Program halted.
 
-Limitations:
-- 100-word memory limit
-- No floating-point support
+Key Features
+- Accepts BasicML files with 4-digit instructions
+- Interactive input for READ operations
+- Automatic memory display after execution
+- Program log showing executed instructions
 
-Contributors:
+File Requirements
+Input files must:
+1. Have .txt extension
+2. Contain one 4-digit instruction per line
+3. Example valid line: +1007 or 2007
+
+Troubleshooting
+- "File does not exist in folder": Verify correct path
+- "Invalid word": Input must be 4 digits (e.g., 1234 or +5678)
+- "File type invalid": Must use .txt files
+
+Project Team
 - Agustin Suarez Berios
-- Brinley Crowther 
+- Brinley Crowther
 - Owen Rasor
 - Spencer Rohwer
+
+Additional Documents
+- Design specifications: uvsim-designDocument.docx
+- Unit test spreadsheet: (see submitted files)
+- Sprint meeting reports: (see submitted documents)
