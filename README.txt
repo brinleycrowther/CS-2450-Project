@@ -2,11 +2,13 @@ UVSim - Basic Machine Language Simulator
 ========================================
 
 Description:
-UVSim is a virtual machine simulator for executing BasicML programs. It was designed for computer science education and emulates a 100-word memory architecture with CPU operations including I/O, arithmetic, and control flow.
+UVSim is a virtual machine simulator for executing BasicML programs. 
+It was designed for computer science education and emulates a 100-word 
+memory architecture with CPU operations including I/O, arithmetic, and control flow.
 
 Installation:
 1. Install: 
-   Python 3.6+
+   Python 3.6+ (no additional dependencies required).
 2. Clone repository:
    git clone https://github.com/your-team/uvsim.git
 3. Navigate to project:
@@ -22,7 +24,7 @@ Sample Input Files:
 - Test2.txt: Program demonstrating branching and subtraction
 
 Input Format:
-- One 4-digit signed decimal instruction per line
+- Each instruction is a 4-digit signed decimal number.
 - Example:
   +1007
   +2007
@@ -50,13 +52,16 @@ Enter BasicML file path: Test1.txt
 READ operation - Enter a number: 5
 WRITE operation - Output: 15
 Program halted successfully
+(Note: The output value will depend on the instructions in Test1.txt.)
 
 Project Files:
-- uvsim.py                  : Main simulator logic
-- accumulator.py            : Accumulator component
-- test_*.py                 : Unit tests
-- *.txt                     : Sample programs
-- uvsim-designDocument.docx : Design specs
+uvsim.py: Main simulator logic
+accumulator.py: Accumulator component
+test_accumulator.py: Unit tests for accumulator
+test_uvsim.py: Unit tests for UVSim
+Test1.txt, Test2.txt: Sample BasicML programs
+uvsim-designDocument.docx: Design specifications
+.gitignore: Git ignored files list
 
 Limitations:
 - 100-word memory limit
