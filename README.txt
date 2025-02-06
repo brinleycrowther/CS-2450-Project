@@ -1,6 +1,7 @@
 UVSim Command Line Guide
 ========================
-UVSim is a simulator for executing BasicML programs, designed to help students learn machine language and computer architecture.
+UVSim is a simulator for executing BasicML programs, designed 
+to help students learn machine language and computer architecture.
 
 Prerequisites:
 - Python 3.x installed on your system.
@@ -19,28 +20,38 @@ Example Session
 $ python uvsim.py
 Which file would you like to run? Test1.txt
 
-Enter word: 1234  # Input for first READ operation
-Enter word: 5678  # Input for second READ operation
-7902              # Program output from WRITE operation
+Enter word: +1234  # For READ at location 07
+Enter word: +5678  # For READ at location 08
+6912               # Output from WRITE at location 09
 Program halted.
 
 Key Features
-- Accepts BasicML files with 4-digit instructions
+- 100-word memory capacity (locations 00-99)
 - Interactive input for READ operations
 - Automatic memory display after execution
-- Program log showing executed instructions
+- Execution log with instruction details
 
 File Requirements
-Input files must:
-1. Have .txt extension
-2. Contain one 4-digit instruction per line
-3. Instructions must start with '+' (e.g., +1007) 
-4. Data words may use +/- (e.g., -5678) 
+1. .txt extension required.
+2. One 4-digit word per line:
+   - Instructions: Start with + followed by 4 digits (e.g., +1007)
+   - Data: May use +/- (e.g., -5678)
+3. Maximum 100 lines
+
+Example Valid File:
++1007  # READ to 07
++1008  # READ to 08
++2007  # LOAD from 07
++3008  # ADD from 08
++2109  # STORE to 09
++1109  # WRITE from 09
++4300  # HALT
 
 Troubleshooting
-- "File does not exist in folder": Verify correct path
-- "Invalid word": Input must be 4 digits (e.g., 1234 or +5678)
-- "File type invalid": Must use .txt files
+- "File does not exist in folder": Verify filename/path
+- "Invalid word": Input must be 4 digits
+- "File type invalid": Only .txt files accepted
+- Program hangs: Include +4300 (HALT) instruction
 
 Project Team
 - Agustin Suarez Berios
