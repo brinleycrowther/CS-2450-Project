@@ -55,6 +55,7 @@ def test_store():
     assert accum.memory[0] == "0000"    # default value
     accum.store(0, None)
     assert accum.memory[0] == "1010"
+    assert accum.currVal == "1010"      # currVal should not change
 
 # Test (30..) add function
 def test_add():
@@ -92,7 +93,7 @@ def test_subtract():
     accum.subtract(3, None)
     assert accum.currVal == 0
 
-# Test (33..) divide function
+# Test (32..) divide function
 def test_divide():
     accum = Accumulator()
     accum.currVal = 1000
@@ -107,7 +108,7 @@ def test_divide():
     accum.divide(2, None)
     assert accum.currVal == -125
 
-# Test (34..) multiply function
+# Test (33..) multiply function
 def test_multiply():
     accum = Accumulator()
     accum.currVal = 10
