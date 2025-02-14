@@ -19,6 +19,7 @@ class UVSim:
         self.memory = {i: "0000" for i in range(100)} # tracks and updates memory location. e.g. 00: +1234
         self.accum = Accumulator(self.memory)
         self.record = True
+        self.step = False # if True, program will stop at state until user specifies.
 
     # grabs word from file, splits sign, splits first two digits(function) from last two digits(value)
     # uses accumulator functions to process the word
@@ -36,6 +37,13 @@ class UVSim:
             self.file = input("Which file would you like to run?\n")
             self.wordProcess()
         else:
+            stepInput = input("Would you like to run the program step by step? y/n\n")
+            if stepInput.lower() == 'y':
+                self.step = True
+            elif stepInput.lower() == 'n':
+                self.step = False
+            else:
+                raise ValueError("Input invalid. Must be y or n.")
             lineNum = 0 # tracks line number in file for error messages
             with open(self.file, 'r') as file: # reads file
                 words = file.readlines()
@@ -91,6 +99,17 @@ class UVSim:
                 else:
                     self.log.append(f'Word: {value} in memory space {self.counter} is inoperable.')
 
+                if self.step == False:
+                    continue
+                else:
+                    self.stepProgram()
+
+    # displays memory and current state, breaks function when enter is pressed
+    def stepProgram(self):
+        self.inspectMemory()
+        print(self.inspectCurrent())
+        stepInput = input("Press enter to continue")
+        return
 
     # 40.. jumps to specified state in memory(value) and starts counter
     def branch(self, value):
@@ -119,9 +138,9 @@ class UVSim:
     # fetches current state of accumulator. currVal, current instruction, and program counter
     def inspectCurrent(self):
         if self.memSpace == 0:
-            curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nCurrent instruction: {self.memory[self.memSpace]}\nProgram counter: {self.state}'
+            curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nAction: {self.log[self.memSpace]}'
         else:
-            curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nCurrent instruction: {self.memory[self.memSpace - 1]}\nProgram counter: {self.state}'
+            curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nAction: {self.log[self.counter - 1]}'
         return curr
 
     # displays all memory content. eg 00: +1234
@@ -171,8 +190,8 @@ def main():
     inputFile = input("Which file would you like to run?\n") # asks for file to load
     program = UVSim(inputFile)
     program.wordProcess()
-    program.inspectMemory()
-    program.logDisplay()
+    #program.inspectMemory()
+    #program.logDisplay()
     #program.saveState()
 
 if __name__ == '__main__':
