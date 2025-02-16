@@ -1,20 +1,27 @@
-from kivy.app import App
+# from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
+from kivy.uix.filechooser import FileChooserIconView
+from kivy.uix.popup import Popup
+from threading import Thread
+import os
 
 
 class UVSimUI(GridLayout):
     def __init__(self, **kwargs):
-        super(UVSimUI, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.cols = 2
         self.left_half = self._left_half()
         self.right_half = self._right_half()
         self.add_widget(self.left_half)
         self.add_widget(self.right_half)
+
+        from uvsim import UVSim # lazy import to avoid cicular import, keeps logic and ui seperate
+        self.simulator = UVSim(self) # pass UI instance to UVSim
 
     # Left side layout
     def _left_half(self) -> BoxLayout:
@@ -26,7 +33,7 @@ class UVSimUI(GridLayout):
         self.left_layout.add_widget(self.app_banner)
         
         # File selection
-        self.left_layout.add_widget(self._file_selection())
+        self.left_layout.add_widget(self._file_selection_layout())
         
         # Control buttons
         self.left_layout.add_widget(self._control_buttons())
@@ -38,7 +45,7 @@ class UVSimUI(GridLayout):
         self.left_layout.add_widget(self._console_input())
 
         # Console Output
-        self.left_layout.add_widget(self._console_output())
+        self.left_layout.add_widget(self._console_output_layout())
 
         # Log button
         self.left_layout.add_widget(self._log_button())
@@ -46,16 +53,26 @@ class UVSimUI(GridLayout):
         return self.left_layout
 
     # File selection layout (File input, Select file button)
-    def _file_selection(self) -> BoxLayout:
+    def _file_selection_layout(self) -> BoxLayout:
         self.file_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=13, padding=(10, 5))
         self.file_layout.add_widget(Label(text="File:", size_hint_x=0.08))
-        self.file_input = TextInput(text="Enter file name here", multiline = False, size_hint=(0.5, 0.6), pos_hint={'center_x': 0.5, 'center_y': 0.5})
-        self.file_layout.add_widget(self.file_input)
+        self.file_text_input = TextInput(hint_text="Enter file name here", multiline = False, size_hint=(0.5, 0.6), pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        self.file_layout.add_widget(self.file_text_input)
         self.select_file_btn = Button(text="Select File", size_hint_x=0.2)
-        ### TODO finish button binding for on_press attribute ###
+        
+        self.select_file_btn.bind(on_press = self.file_handler)
+
         self.file_layout.add_widget(self.select_file_btn)
         return self.file_layout
     
+    def file_handler(self, instance):
+        selection = self.file_text_input.text
+        if not os.path.isabs(selection):
+            selection = os.path.abspath(selection)
+        
+        print(selection)
+        self.simulator.fileInputToMemory(selection)
+
     # Control buttons layout (Execute, Step, Stop, Save)
     def _control_buttons(self) -> BoxLayout:
         self.control_btn_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=(10, 5))
@@ -93,7 +110,7 @@ class UVSimUI(GridLayout):
         return self.console_in_layout
     
     # Console Output
-    def _console_output(self) -> BoxLayout:
+    def _console_output_layout(self) -> BoxLayout:
         self.console_out_layout = BoxLayout(orientation='vertical', spacing=10, padding=(20, 10))
         self.console_label = Label(text="Console Output:", size_hint_y=0.08, font_size=30, halign='left', valign='middle', padding=(40, 0))
         self.console_label.bind(size=self.console_label.setter('text_size'))
@@ -104,6 +121,15 @@ class UVSimUI(GridLayout):
         self.console_out_layout.add_widget(self.console_label)
         self.console_out_layout.add_widget(self.console_scroller)
         return self.console_out_layout
+    
+    # adds message to output console box
+    def console_insert_text(self, message):
+        self.console_output.text += f'{message}\n'
+
+        # scroll to bottom to view latest message
+        self.console_output.cursor = (0, len(self.console_output.text))
+
+        self.console_output.canvas.ask_update()
         
         # Log button
     def _log_button(self) -> BoxLayout:
@@ -167,7 +193,7 @@ class UVSimUI(GridLayout):
     # Refresh Memory Table Function
     def refresh_memory_table(self):
         self.memory_table.clear_widgets()
-        for key, value in my_uvsim.memory.items():
+        for key, value in self.simulator.memory.items():
             loc = Button(text=str(key), disabled=True, background_color=(0.8, 0.8, 0.8, 1))
             loc.disabled_color = (0, 0, 0, 1)
             loc.background_disabled_normal = ""
@@ -178,7 +204,7 @@ class UVSimUI(GridLayout):
             self.memory_table.add_widget(word)
         return 0
 
-class UVSimApp(App):
+"""class UVSimApp(App):
     def build(self):
         return UVSimUI()
     
@@ -189,4 +215,4 @@ def run_gui(uvsim_obj):
     return 0
 
 if __name__ == "__main__":
-    UVSimApp().run()
+    UVSimApp().run()"""
