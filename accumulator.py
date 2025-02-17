@@ -8,9 +8,9 @@ class Accumulator:
         else:
             self.memory = memory
 
-    def read(self, loc, sign):
+    def read(self, loc, input_word):
         while True:
-            input_word = input("Enter word: ").strip()
+            #input_word = input("Enter word: ").strip()
 
             # Check for sign followed by four numbers
             if input_word.startswith(("+", "-")) and len(input_word) == 5 and input_word[1:].isdigit():

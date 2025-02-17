@@ -70,7 +70,6 @@ class UVSimUI(GridLayout):
         if not os.path.isabs(selection):
             selection = os.path.abspath(selection)
         
-        print(selection)
         self.simulator.fileInputToMemory(selection)
 
     # Control buttons layout (Execute, Step, Stop, Save)
@@ -85,6 +84,10 @@ class UVSimUI(GridLayout):
         self.control_btn_layout.add_widget(self.step_btn)
         self.control_btn_layout.add_widget(self.stop_btn)
         self.control_btn_layout.add_widget(self.save_btn)
+
+        self.execute_btn.bind(on_press = lambda instance: self.simulator.wordProcess(False))
+        self.step_btn.bind(on_press = lambda instance: self.simulator.wordProcess(True))
+
         return self.control_btn_layout
         
     # Accumulator
@@ -96,18 +99,30 @@ class UVSimUI(GridLayout):
         self.accumulator_layout.add_widget(self.accumulator_label)
         self.accumulator_layout.add_widget(self.accumulator_field)
         return self.accumulator_layout
+    
+    # adds current accumulator value to accumulator field
+    def update_accumulator(self, value):
+        self.accumulator_field.text = value
         
     # Console Input
     def _console_input(self) -> BoxLayout:
         self.console_in_layout = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=0, padding=(20, 0))
         self.console_label = Label(text="Console Input:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0))
         self.console_label.bind(size=self.console_label.setter('text_size'))
-        self.console_input = TextInput(text="", multiline=False, size_hint_y=0.4)
+        self.console_input = TextInput(multiline=False, size_hint_y=0.4)
         ### TODO create button or enter key binding for console input ###
-        #self.console_input.bind(on_text_validate=self.on_enter)
+        self.console_input.bind(on_text_validate=self.input_text_handler)
         self.console_in_layout.add_widget(self.console_label)
         self.console_in_layout.add_widget(self.console_input)
         return self.console_in_layout
+    
+    # handles the text input to pass to uvsim
+    def input_text_handler(self, instance):
+        input_word = instance.text
+
+        self.simulator.process_input(input_word)
+        
+        instance.text = "" # clears text box
     
     # Console Output
     def _console_output_layout(self) -> BoxLayout:
@@ -128,8 +143,6 @@ class UVSimUI(GridLayout):
 
         # scroll to bottom to view latest message
         self.console_output.cursor = (0, len(self.console_output.text))
-
-        self.console_output.canvas.ask_update()
         
         # Log button
     def _log_button(self) -> BoxLayout:

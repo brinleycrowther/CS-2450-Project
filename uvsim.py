@@ -23,7 +23,6 @@ class UVSim:
         self.memory = {i: "0000" for i in range(100)} # tracks and updates memory location. e.g. 00: +1234
         self.accum = Accumulator(self.memory)
         self.record = True
-        self.step = False # if True, program will stop at state until user specifies.
 
     # asks for file. validates file. proccesses each word into memory
     def fileInputToMemory(self, inputFile):
@@ -48,7 +47,14 @@ class UVSim:
     
     # grabs word from file, splits sign, splits first two digits(function) from last two digits(value)
     # uses accumulator functions to process the word
-    def wordProcess(self):
+    def wordProcess(self, step = False):
+        if len(self.log) > 0 and self.log[-1] == "+4300 : Program halted":
+            self.update_console("Program halted.")
+            return
+
+        if step and len(self.log) > 0:
+            self.stepProgram()
+
         # goes through each space in memory and processes the word
         while self.counter < self.memSpace:
             value = self.memory[self.counter]
@@ -59,7 +65,9 @@ class UVSim:
 
             # takes OpCode and passes location and sign of word to its function
             if operation == "10":
-                self.log.append(f'{value} : {self.accum.read(location, sign)} read into {location} in memory')
+                self.update_console("Enter word.")
+                self.waiting_for_input = [location, value, step]
+                return # makes program wait for input
             elif operation == "11":
                 self.log.append(f'{value} : {self.accum.write(location, sign)} output from {location} in memory onto screen')
             elif operation == "20":
@@ -87,30 +95,43 @@ class UVSim:
             elif operation == "42":
                 self.branchzero(location)
             elif operation == "43":
-                print("Program halted.")
+                self.update_console(f'{value} : Program halted')
                 self.log.append(f'{value} : Program halted')
-                break
+                Clock.schedule_once(lambda dt: self.ui.update_accumulator(self.getAccumulator())) # updates to current accumulator value
+                return
             else:
                 self.log.append(f'Word: {value} in memory space {self.counter} is inoperable.')
 
-            if self.step == False:
-                continue
-            else:
-                self.stepProgram()
+            if step == True:
+                return
+
+    # takes input from ui to use in logic
+    def process_input(self, input_word):
+        if self.waiting_for_input:
+            location = self.waiting_for_input[0]
+            value = self.waiting_for_input[1]
+            step = self.waiting_for_input[2]
+            self.waiting_for_input = None  # Clear state
+
+            self.log.append(f'{value} : {self.accum.read(location, input_word)} read into {location} in memory')
+
+            # resumes execution
+            self.wordProcess(step)
 
     # displays memory and current state, breaks function when enter is pressed
     def stepProgram(self):
-        stepInput = input("Would you like to run the program step by step? y/n\n")
+        '''stepInput = input("Would you like to run the program step by step? y/n\n")
         if stepInput.lower() == 'y':
             self.step = True
         elif stepInput.lower() == 'n':
             self.step = False
         else:
-            raise ValueError("Input invalid. Must be y or n.")
+            raise ValueError("Input invalid. Must be y or n.")'''
         
-        self.inspectMemory()
-        print(self.inspectCurrent())
-        contInput = input("Press enter to continue")
+        #self.inspectMemory()
+        #contInput = input("Press enter to continue")
+        self.update_console(self.log[-1])
+        Clock.schedule_once(lambda dt: self.ui.update_accumulator(self.getAccumulator())) # updates accumulator with current value
         return
 
     # 40.. jumps to specified state in memory(value) and starts counter
@@ -155,14 +176,14 @@ class UVSim:
 
     # displays log
     def logDisplay(self):
-        print("Program log:")
+        #print("Program log:")
         for item in self.log:
             print(item)
         return self.log
     
     # shows accumulator state
-    def displayAccumulator(self):
-        return f'Accumulator: {self.accum.currVal}'
+    def getAccumulator(self):
+        return str(self.accum.currVal)
     
     # outputs accumulator value and memory into .txt file
     def saveState(self):
@@ -190,7 +211,6 @@ class UVSim:
 
     # outputs text into console
     def update_console(self, message):
-        print(message)
         Clock.schedule_once(lambda dt: self.ui.console_insert_text(message))
 
 class MyUVSimApp(App):
