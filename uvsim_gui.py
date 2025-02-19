@@ -15,13 +15,14 @@ class UVSimUI(GridLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.cols = 2
+
+        from uvsim import UVSim # lazy import to avoid cicular import, keeps logic and ui seperate
+        self.simulator = UVSim(self) # pass UI instance to UVSim
+
         self.left_half = self._left_half()
         self.right_half = self._right_half()
         self.add_widget(self.left_half)
         self.add_widget(self.right_half)
-
-        from uvsim import UVSim # lazy import to avoid cicular import, keeps logic and ui seperate
-        self.simulator = UVSim(self) # pass UI instance to UVSim
 
     # Left side layout
     def _left_half(self) -> BoxLayout:
@@ -187,18 +188,19 @@ class UVSimUI(GridLayout):
         self.memory_scroller = ScrollView(bar_color=(0.5, 0.5, 0.5, 1), bar_width=15, scroll_type=['bars', 'content'])
         self.memory_table = GridLayout(cols=2, spacing=2, padding=(15, 0), size_hint=(1, 10))
 
-        if "my_uvsim" in globals():
-            self.refresh_memory_table()
-        else:
-            for i in range(100):
-                loc = Button(text=f"Loc {i}", disabled=True, background_color=(0.8, 0.8, 0.8, 1))
-                loc.disabled_color = (0, 0, 0, 1)
-                loc.background_disabled_normal = ""
-                word = Button(text=f"Word {i}", disabled = True, background_color = (0.8, 0.8, 0.8, 1))
-                word.background_disabled_normal = ""
-                word.disabled_color = (0, 0, 0, 1)
-                self.memory_table.add_widget(loc)
-                self.memory_table.add_widget(word)
+        self.refresh_memory_table()
+        # if "my_uvsim" in globals():
+        #     self.refresh_memory_table()
+        # else:
+        #     for i in range(100):
+        #         loc = Button(text=f"Loc {i}", disabled=True, background_color=(0.8, 0.8, 0.8, 1))
+        #         loc.disabled_color = (0, 0, 0, 1)
+        #         loc.background_disabled_normal = ""
+        #         word = Button(text=f"Word {i}", disabled = True, background_color = (0.8, 0.8, 0.8, 1))
+        #         word.background_disabled_normal = ""
+        #         word.disabled_color = (0, 0, 0, 1)
+        #         self.memory_table.add_widget(loc)
+        #         self.memory_table.add_widget(word)
         self.memory_scroller.add_widget(self.memory_table)
         
         return self.memory_scroller
