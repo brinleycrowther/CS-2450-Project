@@ -5,9 +5,10 @@ from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
-from kivy.uix.filechooser import FileChooserIconView
-from kivy.uix.popup import Popup
-from threading import Thread
+from kivy.core.window import Window
+# from kivy.uix.filechooser import FileChooserIconView
+# from kivy.uix.popup import Popup
+# from threading import Thread
 import os
 
 
@@ -16,7 +17,7 @@ class UVSimUI(GridLayout):
         super().__init__(**kwargs)
         self.cols = 2
 
-        from uvsim import UVSim # lazy import to avoid cicular import, keeps logic and ui seperate
+        from uvsim import UVSim # lazy import to avoid circular import, keeps logic and ui separate
         self.simulator = UVSim(self) # pass UI instance to UVSim
 
         self.left_half = self._left_half()
@@ -48,8 +49,8 @@ class UVSimUI(GridLayout):
         # Console Output
         self.left_layout.add_widget(self._console_output_layout())
 
-        # Log button
-        self.left_layout.add_widget(self._log_button())
+        ### Log button currently deprecated from design ###
+        # self.left_layout.add_widget(self._log_button())
 
         return self.left_layout
 
@@ -57,46 +58,93 @@ class UVSimUI(GridLayout):
     def _file_selection_layout(self) -> BoxLayout:
         self.file_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=13, padding=(10, 5))
         self.file_layout.add_widget(Label(text="File:", size_hint_x=0.08))
-        self.file_text_input = TextInput(hint_text="Enter file name here", multiline = False, size_hint=(0.5, 0.6), pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        self.file_text_input = TextInput(text="", hint_text="Enter file name here", multiline = False, size_hint=(0.5, 0.6), pos_hint={'center_x': 0.5, 'center_y': 0.5})
         self.file_layout.add_widget(self.file_text_input)
         self.select_file_btn = Button(text="Select File", size_hint_x=0.2)
         
         self.select_file_btn.bind(on_press = self.file_handler)
+        self.file_text_input.bind(on_text_validate = self.file_handler)
+        self.file_text_input.focus = True
 
         self.file_layout.add_widget(self.select_file_btn)
         return self.file_layout
     
+    # File selection button's on_press functionality
     def file_handler(self, instance):
         selection = self.file_text_input.text
+        if selection == "":
+            self.simulator.update_console("No file selected. Please enter a valid file name.")
+            return 0
         if not os.path.isabs(selection):
             selection = os.path.abspath(selection)
         
-        self.simulator.fileInputToMemory(selection)
+        file_try = self.simulator.fileInputToMemory(selection)
+        self.file_text_input.text = ""
+        if file_try == 0:
+            self.refresh_memory_table()
+            self.file_text_input.hint_text = "File loaded successfully!"
+            self.file_text_input.disabled = True
+            self.select_file_btn.disabled = True
+            return 0
+        else:
+            return -1
 
     # Control buttons layout (Execute, Step, Stop, Save)
     def _control_buttons(self) -> BoxLayout:
         self.control_btn_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=(10, 5))
         self.execute_btn = Button(text="Execute")
         self.step_btn = Button(text="Step")
-        self.stop_btn = Button(text="Stop")
         self.save_btn = Button(text="Save")
-        ### TODO finish button bindings for on_press attributes ###
+        self.quit_btn = Button(text="Quit")
+        
         self.control_btn_layout.add_widget(self.execute_btn)
         self.control_btn_layout.add_widget(self.step_btn)
-        self.control_btn_layout.add_widget(self.stop_btn)
         self.control_btn_layout.add_widget(self.save_btn)
+        self.control_btn_layout.add_widget(self.quit_btn)
 
-        self.execute_btn.bind(on_press = lambda instance: self.simulator.wordProcess(False))
-        self.step_btn.bind(on_press = lambda instance: self.simulator.wordProcess(True))
+        self.execute_btn.bind(on_release = self.execute_handler)
+        self.step_btn.bind(on_release = self.step_handler)
+        self.save_btn.bind(on_release = self.save_handler)
+        self.quit_btn.bind(on_release = self.quit_handler)
 
         return self.control_btn_layout
+    
+    # Execute button's on_press functionality
+    def execute_handler(self, instance):
+        if self.file_text_input.disabled == True:
+            self.simulator.wordProcess(False)
+            self.refresh_memory_table()
+        else:
+            self.simulator.update_console("No file loaded. Please load a file before executing.")
+        return 0
+    
+    # Step button's on_press functionality
+    def step_handler(self, instance):
+        if self.file_text_input.disabled == True:
+            self.simulator.wordProcess(True)
+            self.refresh_memory_table()
+        else:
+            self.simulator.update_console("No file loaded. Please load a file before stepping.")
+        return 0
+    
+    # Save button's on_press functionality
+    def save_handler(self, instance):
+        if self.file_text_input.disabled == True:
+            self.simulator.saveMemory()
+        else:
+            self.simulator.update_console("No file loaded. Please load a file before saving.")
+        return 0
+    
+    # Quit button's on_press functionality
+    def quit_handler(self, instance):
+        self.simulator.quit()
         
-    # Accumulator
+    # Accumulator layout
     def _accumulator_layout(self) -> BoxLayout:
         self.accumulator_layout = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=0, padding=(20, 0))
         self.accumulator_label = Label(text="Accumulator:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0))
         self.accumulator_label.bind(size=self.accumulator_label.setter('text_size'))
-        self.accumulator_field = TextInput(text="No value in accumulator...", readonly=True, size_hint_y=0.4)
+        self.accumulator_field = TextInput(text="No value in accumulator...", readonly=True, size_hint_y=0.4, padding=(20, 10))
         self.accumulator_layout.add_widget(self.accumulator_label)
         self.accumulator_layout.add_widget(self.accumulator_field)
         return self.accumulator_layout
@@ -105,33 +153,39 @@ class UVSimUI(GridLayout):
     def update_accumulator(self, value):
         self.accumulator_field.text = value
         
-    # Console Input
+    # Console Input layout
     def _console_input(self) -> BoxLayout:
         self.console_in_layout = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=0, padding=(20, 0))
         self.console_label = Label(text="Console Input:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0))
         self.console_label.bind(size=self.console_label.setter('text_size'))
-        self.console_input = TextInput(multiline=False, size_hint_y=0.4)
-        ### TODO create button or enter key binding for console input ###
+        self.console_input = TextInput(multiline=False, size_hint_y=0.4, padding=(20, 10), disabled=True)
         self.console_input.bind(on_text_validate=self.input_text_handler)
         self.console_in_layout.add_widget(self.console_label)
         self.console_in_layout.add_widget(self.console_input)
         return self.console_in_layout
     
+    # adds focus to console input text box
+    def focus_console_input(self):
+        self.console_input.disabled = False
+        self.console_input.focus = True
+    
     # handles the text input to pass to uvsim
     def input_text_handler(self, instance):
         input_word = instance.text
+        instance.text = "" # clears text box
+        instance.disabled = True
 
         self.simulator.process_input(input_word)
-        
-        instance.text = "" # clears text box
     
-    # Console Output
+        return 0
+    
+    # Console Output layout
     def _console_output_layout(self) -> BoxLayout:
         self.console_out_layout = BoxLayout(orientation='vertical', spacing=10, padding=(20, 10))
         self.console_label = Label(text="Console Output:", size_hint_y=0.08, font_size=30, halign='left', valign='middle', padding=(40, 0))
         self.console_label.bind(size=self.console_label.setter('text_size'))
         self.console_scroller = ScrollView(bar_color=(0.2, 0.2, 0.2, 1), bar_width=10)
-        self.console_output = TextInput(text="", multiline=True, readonly=True, size_hint=(1, None))
+        self.console_output = TextInput(text="Welcome to UVSim!\nPlease load a file, then press Execute or Step to run.\n", multiline=True, readonly=True, size_hint=(1, None), padding=(10, 5))
         self.console_output.height = max( self.console_output.minimum_height, self.console_scroller.height * 4)
         self.console_scroller.add_widget(self.console_output)
         self.console_out_layout.add_widget(self.console_label)
@@ -145,15 +199,15 @@ class UVSimUI(GridLayout):
         # scroll to bottom to view latest message
         self.console_output.cursor = (0, len(self.console_output.text))
         
-        # Log button
-    def _log_button(self) -> BoxLayout:
-        self.log_layout = BoxLayout(orientation='horizontal', size_hint=(0.4, 0.2), spacing=10, padding=(50, 10))
-        self.log_btn = Button(text="Display Log", size_hint_y=1)
-        ### TODO finish button binding for on_press attribute ###
-        self.log_layout.add_widget(self.log_btn)
-        return self.log_layout
+    ### Log button currently deprecated from design ###
+    '''def _log_button(self) -> BoxLayout:
+    #     self.log_layout = BoxLayout(orientation='horizontal', size_hint=(0.4, 0.2), spacing=10, padding=(50, 10))
+    #     self.log_btn = Button(text="Display Log", size_hint_y=1)
+    #     ### TODO finish button binding for on_press attribute ###
+    #     self.log_layout.add_widget(self.log_btn)
+    #     return self.log_layout'''
 
-    # Right side layout (Memory Table
+    # Right side layout (Memory Table)
     def _right_half(self):
         self.right_layout = BoxLayout(orientation='vertical', size_hint=(0.4, 1), padding=(10, 10))
 
@@ -170,7 +224,7 @@ class UVSimUI(GridLayout):
         
         return self.right_layout
     
-    # Table header
+    # Table header (Location, Word)
     def _table_header(self) -> GridLayout:
         self.table_header = GridLayout(cols=2, size_hint=(1, 0.15), spacing=2, padding=(15, 10))
         loc = Button(text="Location", disabled = True, background_color = (0.8, 0.8, 0.8, 1))
@@ -186,28 +240,19 @@ class UVSimUI(GridLayout):
     # Memory Table
     def _memory_table(self) -> ScrollView:
         self.memory_scroller = ScrollView(bar_color=(0.5, 0.5, 0.5, 1), bar_width=15, scroll_type=['bars', 'content'])
-        self.memory_table = GridLayout(cols=2, spacing=2, padding=(15, 0), size_hint=(1, 10))
+        self.memory_table = GridLayout(cols=2, spacing=2, padding=(15, 0), size_hint=(1, 8))
 
         self.refresh_memory_table()
-        # if "my_uvsim" in globals():
-        #     self.refresh_memory_table()
-        # else:
-        #     for i in range(100):
-        #         loc = Button(text=f"Loc {i}", disabled=True, background_color=(0.8, 0.8, 0.8, 1))
-        #         loc.disabled_color = (0, 0, 0, 1)
-        #         loc.background_disabled_normal = ""
-        #         word = Button(text=f"Word {i}", disabled = True, background_color = (0.8, 0.8, 0.8, 1))
-        #         word.background_disabled_normal = ""
-        #         word.disabled_color = (0, 0, 0, 1)
-        #         self.memory_table.add_widget(loc)
-        #         self.memory_table.add_widget(word)
+        
         self.memory_scroller.add_widget(self.memory_table)
         
         return self.memory_scroller
     
     # Refresh Memory Table Function
+    # NOTE: Memory table is made of disabled buttons, not labels. This is for color, grid, and design purposes.
     def refresh_memory_table(self):
         self.memory_table.clear_widgets()
+
         for key, value in self.simulator.memory.items():
             loc = Button(text=str(key), disabled=True, background_color=(0.8, 0.8, 0.8, 1))
             loc.disabled_color = (0, 0, 0, 1)

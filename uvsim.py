@@ -10,6 +10,7 @@ to specific state in memory, and can be reset and saved. Both memory and executi
 from accumulator import Accumulator
 from pathlib import Path # used to check if file is in path
 from kivy.app import App
+from kivy.core.window import Window
 from kivy.clock import Clock
 import os
 from uvsim_gui import UVSimUI
@@ -40,20 +41,20 @@ class UVSim:
                         self.memSpace += 1
                 
                 self.update_console("Loaded file!")
+                return 0
             except Exception as e:
                 self.update_console(f'Error opening file: {e}')
+                return -1
         else:
             self.update_console("Invalid file.")
+            return -1
     
     # grabs word from file, splits sign, splits first two digits(function) from last two digits(value)
     # uses accumulator functions to process the word
     def wordProcess(self, step = False):
         if len(self.log) > 0 and self.log[-1] == "+4300 : Program halted":
-            self.update_console("Program halted.")
+            self.update_console("Program halted.\nPress save to save state to a text file, and Quit to exit.")
             return
-
-        if step and len(self.log) > 0:
-            self.stepProgram()
 
         # goes through each space in memory and processes the word
         while self.counter < self.memSpace:
@@ -65,11 +66,12 @@ class UVSim:
 
             # takes OpCode and passes location and sign of word to its function
             if operation == "10":
-                self.update_console("Enter word.")
+                self.update_console("Enter word into Console Input, then press Enter.")
+                self.ui.focus_console_input()
                 self.waiting_for_input = [location, value, step]
                 return # makes program wait for input
             elif operation == "11":
-                self.log.append(f'{value} : {self.accum.write(location, sign)} output from {location} in memory onto screen')
+                self.log.append(f'{value} : {self.accum.write(location, sign)} output from {location} in memory onto terminal')
             elif operation == "20":
                 self.accum.load(location, sign)
                 self.log.append(f'{value} : {self.memory[int(location)]} loaded into accumulator')
@@ -95,14 +97,16 @@ class UVSim:
             elif operation == "42":
                 self.branchzero(location)
             elif operation == "43":
-                self.update_console(f'{value} : Program halted')
+                self.update_console(f'{value} : Program halted.\nPress Save to save current state to a text file, and Quit to exit.')
                 self.log.append(f'{value} : Program halted')
                 Clock.schedule_once(lambda dt: self.ui.update_accumulator(self.getAccumulator())) # updates to current accumulator value
                 return
             else:
                 self.log.append(f'Word: {value} in memory space {self.counter} is inoperable.')
 
-            if step == True:
+            self.ui.refresh_memory_table()
+            if step and len(self.log) > 0:
+                self.stepProgram()
                 return
 
     # takes input from ui to use in logic
@@ -113,10 +117,21 @@ class UVSim:
             step = self.waiting_for_input[2]
             self.waiting_for_input = None  # Clear state
 
-            self.log.append(f'{value} : {self.accum.read(location, input_word)} read into {location} in memory')
+            read_return = self.accum.read(location, input_word)
+            if read_return == -1:
+                self.update_console("Invalid word.")
+                self.counter -= 1 # decrements counter to reprocess word
+                self.wordProcess(step) # resumes execution
+                return
+            else:
+                self.log.append(f'{value} : {read_return} read into {location} in memory')
+                self.ui.refresh_memory_table()
 
-            # resumes execution
-            self.wordProcess(step)
+                # resumes execution
+                if step == True:
+                    self.stepProgram()
+                    return
+                self.wordProcess(step)
 
     # displays memory and current state, breaks function when enter is pressed
     def stepProgram(self):
@@ -137,25 +152,25 @@ class UVSim:
     # 40.. jumps to specified state in memory(value) and starts counter
     def branch(self, value):
         self.counter = int(value)
-        self.log.append(f'40{value} : Program branch to {value}')
+        self.log.append(f'+40{value} : Program branch to {value}')
         return self.memSpace
 
     # 41.. jumps to specified state in memory(value) if accumulator is negative and starts counter
     def branchneg(self, value):
         if self.accum.currVal < 0:
             self.counter = int(value)
-            self.log.append(f'41{value} : Program branch to {value}')
+            self.log.append(f'+41{value} : Program branch to {value}')
         else:
-            self.record = False
+            self.log.append(f'+41{value} : Program branch to {value} failed')
         return self.memSpace
     
     # 42.. jumps to specified state in memory(value) if accumulator is zero and starts counter
     def branchzero(self, value):
         if self.accum.currVal == 0:
             self.counter = int(value)
-            self.log.append(f'42{value} : Program branch to {value}')
+            self.log.append(f'+42{value} : Program branch to {value}')
         else:
-            self.record = False
+            self.log.append(f'+42{value} : Program branch to {value} failed')
         return self.memSpace
 
     # fetches current state of accumulator. currVal, current instruction, and program counter
@@ -183,35 +198,40 @@ class UVSim:
     
     # shows accumulator state
     def getAccumulator(self):
-        return str(self.accum.currVal)
+        if self.accum.currVal == 0:
+            return "No value in accumulator..."
+        else:
+            return str(self.accum.currVal)
     
     # outputs accumulator value and memory into .txt file
-    def saveState(self):
-        inputInvalid = True
-        while inputInvalid:
-            fileSave = input("Save as:\n")
+    def saveMemory(self):
+        try:
+            with open("uvsim_save.txt", 'w') as file:
+                file.write("UVSim Program\n\n")
+                file.write(f'Accumulator: {self.accum.currVal}\n\n')
+                file.write(f'Memory:\n')
+                for location, value in self.memory.items():
+                    if location < 10:
+                        file.write(f'0{location}: {value}\n')
+                    else:
+                        file.write(f'{location}: {value}\n')
 
-            if fileSave == '':
-                print('Input invalid.')
-            elif fileSave[-4] != '.':
-                inputInvalid = False
-                fileSave += ".txt"
-            else:
-                inputInvalid = False
-
-        with open(fileSave, 'w') as file:
-            file.write("UVSim Program\n\n")
-            file.write(f'Accumulator: {self.accum.currVal}\n\n')
-            file.write(f'Memory:\n')
-            for location, value in self.memory.items():
-                if location < 10:
-                    file.write(f'0{location}: {value}\n')
-                else:
-                    file.write(f'{location}: {value}\n')
+            self.update_console("State saved to uvsim_save.txt")
+            return 0     
+           
+        except Exception as e:
+            self.update_console(f'Error saving state: {e}')
+            return -1
 
     # outputs text into console
     def update_console(self, message):
         Clock.schedule_once(lambda dt: self.ui.console_insert_text(message))
+
+    # quits program
+    def quit(self):
+        App.get_running_app().stop()
+        Window.close()
+        exit()
 
 class MyUVSimApp(App):
     def build(self):

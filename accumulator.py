@@ -20,7 +20,7 @@ class Accumulator:
                 input_word = f"+{input_word}"  # Assume positive if no sign given
                 break
             else:
-                print("Invalid word")
+                return -1
 
         # Store the valid input into memory
         self.memory[int(loc)] = input_word
