@@ -8,29 +8,56 @@ Prerequisites:
 
 Installation:
 1. Ensure Python 3.x is installed.
-2. Download the UVSim files (`uvisim.py` and `accumulator.py`).
+2. Install required dependencies:
+   pip install kivy
+3. Download all project files (uvsim.py, accumulator.py, uvsim_gui.py)
 
-Usage:
-1. Open a terminal/command prompt.
-2. Navigate to the directory containing the UVSim files.
-3. Run the simulator:
+Running the GUI:
+1. Navigate to the directory containing the files
+2. Run the simulator:
    python uvsim.py
 
-Example Session
-$ python uvsim.py
-Which file would you like to run? 
-Test1.txt
+GUI Usage Guide:
+1. Load a Program:
+- Type file path in "File:" text box
+- Click "Select File" or press Enter
+- Supported files: .txt with BasicML code
+2. Execute Program:
+- Execute Button: Run program continuously
+- Step Button: Execute one instruction at a time
+- Program counter shown in memory table
+3. Console Interaction:
+- During READ operations:
+   1. Console Input field becomes active
+   2. Enter 4-digit values (+/-1234 format)
+   3. Press Enter to submit
+4. Memory Display:
+- Right panel shows memory contents
+- Updated in real-time during execution
+- Locations 00-99 shown as [Location][Word] pairs
+5. Program Controls:
+- Save Button: Save current state to uvsim_save.txt
+- Quit Button: Exit application
+- Accumulator value displayed below controls
 
-Enter word: +1234  # For READ at location 07
-Enter word: +5678  # For READ at location 08
-6912               # Output from WRITE at location 09
-Program halted.
+Example GUI Session:
+1. Launch application
+2. Enter "test_program.txt" in File field
+3. Click "Select File"
+4. Click "Step" to execute instructions one-by-one
+5. When READ operation occurs:
+   - Type input value in Console Input
+   - Press Enter to continue
+6. View results in Console Output
+7. Click "Save" to export state when finished
 
-Key Features
-- 100-word memory capacity (locations 00-99)
-- Interactive input for READ operations
-- Automatic memory display after execution
-- Execution log with instruction details
+Key Features:
+- Graphical memory table with real-time updates
+- Step-through execution for debugging
+- Integrated console for input/output
+- Visual accumulator status display
+- One-click state saving
+- Responsive UI with clear error messages
 
 File Requirements
 1. .txt extension required.
@@ -49,10 +76,11 @@ Example Valid File:
 +4300  # HALT
 
 Troubleshooting
-- "File does not exist in folder": Verify filename/path
-- "Invalid word": Input must be 4 digits
-- "File type invalid": Only .txt files accepted
-- Program hangs: Include +4300 (HALT) instruction
+- Blank window: Verify Kivy installation
+- Input not working: Check active field (green border indicates focus)
+- Missing buttons: Resize window to ensure proper layout
+- Font rendering issues: Update graphics drivers
+- File loading failures: Use absolute paths (e.g., C:/path/to/file.txt)
 
 Project Team
 - Agustin Suarez Berios
