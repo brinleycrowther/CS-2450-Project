@@ -13,12 +13,13 @@ def test_default_values():
 # Test (10..) read function 
 def test_read(monkeypatch):
     accum = Accumulator()
-    test_inputs = iter(["1000", "+2000", "-3000"])  # iterable list for use with monkeypatch
-    monkeypatch.setattr('builtins.input', lambda _: next(test_inputs))  # monkeypatch from pytest overrides input function to simulate user input
+    
+    # test_inputs = iter(["1000", "+2000", "-3000"])  # iterable list for use with monkeypatch
+    # monkeypatch.setattr('builtins.input', lambda _: next(test_inputs))  # monkeypatch from pytest overrides input function to simulate user input
 
-    test1 = accum.read(10, None)
-    test2 = accum.read(11, None)
-    test3 = accum.read(12, None)
+    test1 = accum.read(10, "1000")
+    test2 = accum.read(11, "+2000")
+    test3 = accum.read(12, "-3000")
     assert accum.memory[10] == "+1000" and test1 == "+1000"
     assert accum.memory[11] == "+2000" and test2 == "+2000"
     assert accum.memory[12] == "-3000" and test3 == "-3000"

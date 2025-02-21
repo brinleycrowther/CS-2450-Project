@@ -176,9 +176,9 @@ class UVSim:
     # fetches current state of accumulator. currVal, current instruction, and program counter
     def inspectCurrent(self):
         if self.memSpace == 0:
-            curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nAction: {self.log[self.memSpace]}'
+            curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nAction: No instructions loaded'
         else:
-            curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nAction: {self.log[self.counter - 1]}'
+            curr = f'Program\'s current state:\nAccumulator: {self.accum.currVal}\nAction: {self.log[-1]}'
         return curr
 
     # displays all memory content. eg 00: +1234
