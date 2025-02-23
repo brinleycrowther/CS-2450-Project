@@ -7,13 +7,13 @@ File passed as a string parameter into instance of UVSim.
 UVSim class tracks execution log and memory. It processes each word, logs it, branches
 to specific state in memory, and can be reset and saved. Both memory and execution log can be inspected by user.
 '''
-from src.accumulator import Accumulator
+from accumulator import Accumulator
 from pathlib import Path # used to check if file is in path
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.clock import Clock
 import os
-from src.uvsim_gui import UVSimUI
+from uvsim_gui import UVSimUI
 
 class UVSim:
     def __init__(self, ui = None):

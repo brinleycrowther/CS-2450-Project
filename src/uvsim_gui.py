@@ -17,7 +17,7 @@ class UVSimUI(GridLayout):
         super().__init__(**kwargs)
         self.cols = 2
 
-        from src.uvsim import UVSim # lazy import to avoid circular import, keeps logic and ui separate
+        from uvsim import UVSim # lazy import to avoid circular import, keeps logic and ui separate
         self.simulator = UVSim(self) # pass UI instance to UVSim
 
         self.left_half = self._left_half()
