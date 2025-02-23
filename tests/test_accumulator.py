@@ -2,7 +2,7 @@
 Test file for functionality of Accumulator class in accumulator.py
 '''
 
-from accumulator import Accumulator
+from src.accumulator import Accumulator
 
 # Test init attributes
 def test_default_values(): 

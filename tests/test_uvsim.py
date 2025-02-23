@@ -2,8 +2,8 @@
 Test file for functionality of UVSim class in uvsim.py
 '''
 
-from uvsim import UVSim
-from accumulator import Accumulator
+from src.uvsim import UVSim
+from src.accumulator import Accumulator
 
 # Test UVSim initialization
 def test_default_values():
