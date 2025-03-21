@@ -1,9 +1,13 @@
 '''
 Test file for functionality of UVSim class in uvsim.py
 '''
+import os
+import sys
 
-from src.uvsim import UVSim
-from src.accumulator import Accumulator
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+
+from uvsim import UVSim
+from accumulator import Accumulator
 
 # Test UVSim initialization
 def test_default_values():
@@ -58,3 +62,40 @@ def test_inspectCurrent():
     sim.branch(10)
     assert sim.counter == 10
     assert sim.inspectCurrent() == "Program's current state:\nAccumulator: 10\nAction: +4010 : Program branch to 10"
+
+def test_saveMemory(tmp_path):
+    # Setup
+    sim = UVSim()
+    sim.accum.currVal = 42
+    sim.memory[0] = "+1009"
+    sim.memory[1] = "+4300"
+    
+    # Redirect file to temp dir using monkeypatching (or tweak uvsim.py to accept filename)
+    save_path = tmp_path / "uvsim_save.txt"
+
+    # Monkeypatch the file open inside UVSim (since we can't pass custom filename to saveMemory())
+    original_open = open
+
+    def mock_open(path, mode='r', *args, **kwargs):
+        if path == "uvsim_save.txt":
+            return original_open(save_path, mode, *args, **kwargs)
+        return original_open(path, mode, *args, **kwargs)
+
+    # Replace built-in open temporarily
+    import builtins
+    builtins.open = mock_open
+
+    try:
+        result = sim.saveMemory()
+        assert result == 0
+        assert save_path.exists()
+
+        with open(save_path, "r") as f:
+            content = f.read()
+            assert "UVSim Program" in content
+            assert "Accumulator: 42" in content
+            assert "00: +1009" in content
+            assert "01: +4300" in content
+    finally:
+        # Restore the original open
+        builtins.open = original_open

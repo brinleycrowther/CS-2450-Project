@@ -41,6 +41,9 @@ class UVSim:
                         self.memSpace += 1
                 
                 self.update_console("Loaded file!")
+                Clock.schedule_once(lambda dt: self.ui.update_program_counter(self.counter)) # updtes program counter in ui
+                self.ui.refresh_memory_table(0)
+                Clock.schedule_once(lambda dt: self.ui.update_accumulator(self.getAccumulator())) # updates accumulator with current value
                 return 0
             except Exception as e:
                 self.update_console(f'Error opening file: {e}')
@@ -58,6 +61,7 @@ class UVSim:
 
         # goes through each space in memory and processes the word
         while self.counter < self.memSpace:
+            #self.ui.refresh_memory_table(self.counter - 1)
             value = self.memory[self.counter]
             self.counter += 1
             sign = value[0] if value[0] in ('+', '-') else '+'
@@ -68,6 +72,7 @@ class UVSim:
             if operation == "10":
                 self.update_console("Enter word into Console Input, then press Enter.")
                 self.ui.focus_console_input()
+                self.ui.refresh_memory_table(highlight_index=(self.counter-1))
                 self.waiting_for_input = [location, value, step]
                 return # makes program wait for input
             elif operation == "11":
@@ -99,12 +104,13 @@ class UVSim:
             elif operation == "43":
                 self.update_console(f'{value} : Program halted.\nPress Save to save current state to a text file, and Quit to exit.')
                 self.log.append(f'{value} : Program halted')
+                Clock.schedule_once(lambda dt: self.ui.update_program_counter(self.counter-1))
+                self.ui.refresh_memory_table(highlight_index=(self.counter-1))
                 Clock.schedule_once(lambda dt: self.ui.update_accumulator(self.getAccumulator())) # updates to current accumulator value
                 return
             else:
                 self.log.append(f'Word: {value} in memory space {self.counter} is inoperable.')
 
-            self.ui.refresh_memory_table()
             if step and len(self.log) > 0:
                 self.stepProgram()
                 return
@@ -125,7 +131,6 @@ class UVSim:
                 return
             else:
                 self.log.append(f'{value} : {read_return} read into {location} in memory')
-                self.ui.refresh_memory_table()
 
                 # resumes execution
                 if step == True:
@@ -146,6 +151,8 @@ class UVSim:
         #self.inspectMemory()
         #contInput = input("Press enter to continue")
         self.update_console(self.log[-1])
+        Clock.schedule_once(lambda dt: self.ui.update_program_counter(self.counter - 1)) # updtes program counter in ui
+        self.ui.refresh_memory_table(self.counter - 1)
         Clock.schedule_once(lambda dt: self.ui.update_accumulator(self.getAccumulator())) # updates accumulator with current value
         return
 
