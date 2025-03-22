@@ -339,6 +339,7 @@ class UVSimUI(GridLayout):
             self.memory_table.add_widget(word)
         return 0
 
+    # Turns the file select button into a reset button at the end of program use
     def make_reset_button(self):
         self.select_file_btn.disabled = False
         self.select_file_btn.text = "Reset App"
@@ -346,6 +347,7 @@ class UVSimUI(GridLayout):
         self.select_file_btn.bind(on_release = self.reset_handler)
         return 0
     
+    # Reset button functionality to reset the app and GUI to original states
     def reset_handler(self, instance):
 
         self.file_text_input.text = ""
