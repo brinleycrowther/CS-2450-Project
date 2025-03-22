@@ -41,6 +41,9 @@ class UVSimUI(GridLayout):
         # Control buttons
         self.left_layout.add_widget(self._control_buttons())
 
+        # Program Counter
+        self.left_layout.add_widget(self._program_counter_layout())
+
         # Accumulator
         self.left_layout.add_widget(self._accumulator_layout())
 
@@ -82,7 +85,7 @@ class UVSimUI(GridLayout):
         file_try = self.simulator.fileInputToMemory(selection)
         self.file_text_input.text = ""
         if file_try == 0:
-            self.refresh_memory_table()
+            self.refresh_memory_table(0)
             self.file_text_input.hint_text = "File loaded successfully!"
             self.file_text_input.disabled = True
             self.select_file_btn.disabled = True
@@ -114,7 +117,6 @@ class UVSimUI(GridLayout):
     def execute_handler(self, instance):
         if self.file_text_input.disabled == True:
             self.simulator.wordProcess(False)
-            self.refresh_memory_table()
         else:
             self.simulator.update_console("No file loaded. Please load a file before executing.")
         return 0
@@ -123,7 +125,6 @@ class UVSimUI(GridLayout):
     def step_handler(self, instance):
         if self.file_text_input.disabled == True:
             self.simulator.wordProcess(True)
-            self.refresh_memory_table()
         else:
             self.simulator.update_console("No file loaded. Please load a file before stepping.")
         return 0
@@ -139,6 +140,20 @@ class UVSimUI(GridLayout):
     # Quit button's on_press functionality
     def quit_handler(self, instance):
         self.simulator.quit()
+
+    # Program counter layout
+    def _program_counter_layout(self) ->BoxLayout:
+        self.pc_layout = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=0, padding=(20, 0))
+        self.pc_label = Label(text="Program Counter:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0))
+        self.pc_label.bind(size=self.pc_label.setter('text_size'))
+        self.pc_field = TextInput(text="Program Not Started", readonly=True, size_hint_y=0.4, padding=(20, 10))
+        self.pc_layout.add_widget(self.pc_label)
+        self.pc_layout.add_widget(self.pc_field)
+        return self.pc_layout
+    
+    # Updates the program counter field
+    def update_program_counter(self, value):
+        self.pc_field.text = str(value)
         
     # Accumulator layout
     def _accumulator_layout(self) -> BoxLayout:
@@ -249,14 +264,18 @@ class UVSimUI(GridLayout):
         
         return self.memory_scroller
     
-    def refresh_memory_table(self):
+    # Refresh Memory Table Function
+    # NOTE: Memory table is made of disabled buttons, not labels. This is for color, grid, and design purposes.
+    def refresh_memory_table(self, highlight_index = None):
         self.memory_table.clear_widgets()
 
         for key, value in self.simulator.memory.items():
+            is_current = (highlight_index is not None and int(key) == highlight_index)
             loc = Button(
                 text=str(key), 
                 disabled=True, 
-                background_color=(0.8, 0.8, 0.8, 1)
+                background_color=(0.8, 0.8, 0.8, 1) if is_current else (0.8, 0.8, 0.8, 1)
+                # background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1)
             )
             loc.disabled_color = (0, 0, 0, 1)
             loc.background_disabled_normal = ""
@@ -265,10 +284,12 @@ class UVSimUI(GridLayout):
             word = SimTextInput(
                 text=value, 
                 multiline=False,  # Keep single-line input
-                background_color=(1, 1, 1, 1),  # White background for editable field
                 foreground_color=(0, 0, 0, 1),
-                text_key = key
+                text_key = key,
+                background_color=(1, 1, 1, 1) if is_current else (0.8, 0.8, 0.8, 1)# White background for editable field
+                # background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1))
             )
+
             word.disabled_color = (0, 0, 0, 1)
             word.background_disabled_normal = ""
 
