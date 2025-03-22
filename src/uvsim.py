@@ -40,7 +40,8 @@ class UVSim:
                         self.memory[self.memSpace] = word
                         self.memSpace += 1
                 
-                self.update_console("Loaded file!")
+                self.update_console(f"Loaded file {inputFile} into memory.")
+                self.log.append(f'File {inputFile} loaded into memory')
                 Clock.schedule_once(lambda dt: self.ui.update_program_counter(self.counter)) # updtes program counter in ui
                 self.ui.refresh_memory_table(0)
                 Clock.schedule_once(lambda dt: self.ui.update_accumulator(self.getAccumulator())) # updates accumulator with current value
@@ -102,11 +103,12 @@ class UVSim:
             elif operation == "42":
                 self.branchzero(location)
             elif operation == "43":
-                self.update_console(f'{value} : Program halted.\nPress Save to save current state to a text file, and Quit to exit.')
+                self.update_console(f'{value} : Program halted.\nPress Save to save current memory to a text file, and Quit to exit.')
                 self.log.append(f'{value} : Program halted')
                 Clock.schedule_once(lambda dt: self.ui.update_program_counter(self.counter-1))
                 self.ui.refresh_memory_table(highlight_index=(self.counter-1))
                 Clock.schedule_once(lambda dt: self.ui.update_accumulator(self.getAccumulator())) # updates to current accumulator value
+                self.ui.make_reset_button()
                 return
             else:
                 self.log.append(f'Word: {value} in memory space {self.counter} is inoperable.')
@@ -211,9 +213,9 @@ class UVSim:
             return str(self.accum.currVal)
     
     # outputs accumulator value and memory into .txt file
-    def saveMemory(self):
+    def saveMemory(self, file_path):
         try:
-            with open("uvsim_save.txt", 'w') as file:
+            with open(file_path, 'w') as file:
                 file.write("UVSim Program\n\n")
                 file.write(f'Accumulator: {self.accum.currVal}\n\n')
                 file.write(f'Memory:\n')
@@ -223,7 +225,7 @@ class UVSim:
                     else:
                         file.write(f'{location}: {value}\n')
 
-            self.update_console("State saved to uvsim_save.txt")
+            self.update_console(f"State saved to {file_path}")
             return 0     
            
         except Exception as e:
@@ -233,6 +235,14 @@ class UVSim:
     # outputs text into console
     def update_console(self, message):
         Clock.schedule_once(lambda dt: self.ui.console_insert_text(message))
+
+    # resets program
+    def reset(self):
+        self.log.append("Program reset.")
+        self.memSpace = 0
+        self.counter = 0
+        self.memory = {i: "0000" for i in range(100)}
+        self.accum = Accumulator(self.memory)
 
     # quits program
     def quit(self):

@@ -6,8 +6,8 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
-# from kivy.uix.filechooser import FileChooserIconView
-# from kivy.uix.popup import Popup
+from kivy.uix.filechooser import FileChooserIconView
+from kivy.uix.popup import Popup
 # from threading import Thread
 import os
 
@@ -61,18 +61,47 @@ class UVSimUI(GridLayout):
     def _file_selection_layout(self) -> BoxLayout:
         self.file_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=13, padding=(10, 5))
         self.file_layout.add_widget(Label(text="File:", size_hint_x=0.08))
-        self.file_text_input = TextInput(text="", hint_text="Enter file name here", multiline = False, size_hint=(0.5, 0.6), pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        self.file_text_input = TextInput(text="", hint_text="Enter file name here, or select file:", multiline = False, size_hint=(0.5, 0.6), pos_hint={'center_x': 0.5, 'center_y': 0.5})
         self.file_layout.add_widget(self.file_text_input)
-        self.select_file_btn = Button(text="Select File", size_hint_x=0.2)
+        self.select_file_btn = Button(text="Select a File", size_hint_x=0.2)
         
-        self.select_file_btn.bind(on_press = self.file_handler)
+        self.select_file_btn.bind(on_release = self._popup_file_chooser)
         self.file_text_input.bind(on_text_validate = self.file_handler)
         self.file_text_input.focus = True
 
         self.file_layout.add_widget(self.select_file_btn)
         return self.file_layout
     
-    # File selection button's on_press functionality
+    # File chooser popup
+    def _popup_file_chooser(self, instance):
+        self.popup_layout = BoxLayout(orientation='vertical')
+        self.file_chooser = FileChooserIconView(show_hidden=False, path=os.getcwd())
+        self.file_chooser.filters = ["*.txt"]
+        self.file_chooser.bind(on_submit = self.file_chooser_handler)
+        self.popup_layout.add_widget(self.file_chooser)
+
+        self.popup_bttn_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.1), spacing=10, padding=(10, 5))
+        self.load_btn = Button(text="Load")
+        self.cancel_btn = Button(text="Cancel")
+        self.popup_bttn_layout.add_widget(self.load_btn)
+        self.popup_bttn_layout.add_widget(self.cancel_btn)
+        self.popup_layout.add_widget(self.popup_bttn_layout)
+
+        self.popup = Popup(title="Select a File", content=self.popup_layout, size_hint=(0.9, 0.9))
+        self.popup.open()
+        self.load_btn.bind(on_release = self.file_chooser_handler)
+        self.cancel_btn.bind(on_release = self.popup.dismiss)
+
+    # File chooser load button on_release functionality
+    def file_chooser_handler(self, instance=None, selection=None, touch=None):
+        if len(self.file_chooser.selection) == 0:
+            self.file_text_input.text = ""
+        else:
+            self.file_text_input.text = os.path.join(self.file_chooser.path, self.file_chooser.selection[0])
+        self.popup.dismiss()
+        self.file_handler(None)
+    
+    # File selection functionality (Enter key or File Chooser Load button)
     def file_handler(self, instance):
         selection = self.file_text_input.text
         if selection == "":
@@ -97,7 +126,7 @@ class UVSimUI(GridLayout):
         self.control_btn_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=(10, 5))
         self.execute_btn = Button(text="Execute")
         self.step_btn = Button(text="Step")
-        self.save_btn = Button(text="Save")
+        self.save_btn = Button(text="Save Memory")
         self.quit_btn = Button(text="Quit")
         
         self.control_btn_layout.add_widget(self.execute_btn)
@@ -107,10 +136,31 @@ class UVSimUI(GridLayout):
 
         self.execute_btn.bind(on_release = self.execute_handler)
         self.step_btn.bind(on_release = self.step_handler)
-        self.save_btn.bind(on_release = self.save_handler)
+        self.save_btn.bind(on_release = self._popup_save_file)
         self.quit_btn.bind(on_release = self.quit_handler)
 
         return self.control_btn_layout
+    
+    # Save Popup for file saving location selection
+    def _popup_save_file(self, instance):
+        self.save_popup_layout = BoxLayout(orientation='vertical')
+        self.save_file_chooser = FileChooserIconView(show_hidden=False, path=os.getcwd())
+        self.save_popup_layout.add_widget(self.save_file_chooser)
+
+        self.save_popup_filename_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.1), spacing=10, padding=(10, 5))
+        self.save_filename_input = TextInput(text="uvsim_save.txt", multiline=False, size_hint_y=0.7, pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        self.save_popup_filename_layout.add_widget(self.save_filename_input)
+        self.save_btn = Button(text="Save", size_hint_x= 0.5)
+        self.cancel_btn = Button(text="Cancel", size_hint_x=0.5)
+        self.save_popup_filename_layout.add_widget(self.save_btn)
+        self.save_popup_filename_layout.add_widget(self.cancel_btn)
+        self.save_popup_layout.add_widget(self.save_popup_filename_layout)
+
+        self.save_popup = Popup(title="Save File", content=self.save_popup_layout, size_hint=(0.9, 0.9))
+        self.save_popup.open()
+        self.save_btn.bind(on_release = self.save_file_handler)
+        self.cancel_btn.bind(on_release = self.save_popup.dismiss)
+
     
     # Execute button's on_press functionality
     def execute_handler(self, instance):
@@ -129,11 +179,20 @@ class UVSimUI(GridLayout):
         return 0
     
     # Save button's on_press functionality
-    def save_handler(self, instance):
+    def save_file_handler(self, instance):
         if self.file_text_input.disabled == True:
-            self.simulator.saveMemory()
+            filename = self.save_filename_input.text.strip()
+            if not filename.endswith(".txt"):
+                filename += ".txt"
+            directory = self.save_file_chooser.path
+            if not os.path.isabs(directory):
+                directory = os.path.abspath(directory)
+            full_path = os.path.join(directory, filename)
+            self.simulator.saveMemory(full_path)
+            self.save_popup.dismiss()
         else:
-            self.simulator.update_console("No file loaded. Please load a file before saving.")
+            self.simulator.update_console("No file loaded. Please load and modify a file before saving.")
+            self.save_popup.dismiss()
         return 0
     
     # Quit button's on_press functionality
@@ -279,6 +338,38 @@ class UVSimUI(GridLayout):
             self.memory_table.add_widget(loc)
             self.memory_table.add_widget(word)
         return 0
+
+    def make_reset_button(self):
+        self.select_file_btn.disabled = False
+        self.select_file_btn.text = "Reset App"
+        self.select_file_btn.unbind(on_release = self.popup_file_chooser)
+        self.select_file_btn.bind(on_release = self.reset_handler)
+        return 0
+    
+    def reset_handler(self, instance):
+
+        self.file_text_input.text = ""
+        self.file_text_input.hint_text = "Enter file name here, or select file:"
+        self.file_text_input.disabled = False
+
+        self.select_file_btn.text = "Select a File"
+        self.select_file_btn.unbind(on_release = self.reset_handler)
+        self.select_file_btn.bind(on_release = self.popup_file_chooser)
+        self.select_file_btn.disabled = False
+
+        self.console_input.text = ""
+        self.console_input.disabled = True
+
+        self.console_output.text = "Welcome to UVSim!\nPlease load a file, then press Execute or Step to run.\n"
+        self.console_output.cursor = (0, 0)
+
+        self.accumulator_field.text = "No value in accumulator..."
+        self.pc_field.text = "Program Not Started"
+        self.simulator.reset()
+        self.refresh_memory_table(0)
+
+        return 0
+    
 
 """class UVSimApp(App):
     def build(self):

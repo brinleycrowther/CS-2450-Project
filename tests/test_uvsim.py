@@ -86,7 +86,7 @@ def test_saveMemory(tmp_path):
     builtins.open = mock_open
 
     try:
-        result = sim.saveMemory()
+        result = sim.saveMemory(save_path)
         assert result == 0
         assert save_path.exists()
 
