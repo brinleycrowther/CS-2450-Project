@@ -274,8 +274,8 @@ class UVSimUI(GridLayout):
             loc = Button(
                 text=str(key), 
                 disabled=True, 
-                background_color=(0.8, 0.8, 0.8, 1) if is_current else (0.8, 0.8, 0.8, 1)
-                # background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1)
+                # background_color=(0.8, 0.8, 0.8, 1) if is_current else (0.8, 0.8, 0.8, 1)
+                background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1)
             )
             loc.disabled_color = (0, 0, 0, 1)
             loc.background_disabled_normal = ""
@@ -286,8 +286,8 @@ class UVSimUI(GridLayout):
                 multiline=False,  # Keep single-line input
                 foreground_color=(0, 0, 0, 1),
                 text_key = key,
-                background_color=(1, 1, 1, 1) if is_current else (0.8, 0.8, 0.8, 1)# White background for editable field
-                # background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1))
+                # background_color=(1, 1, 1, 1) if is_current else (0.8, 0.8, 0.8, 1)# White background for editable field
+                background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1)
             )
 
             word.disabled_color = (0, 0, 0, 1)
