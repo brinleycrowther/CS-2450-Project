@@ -94,7 +94,7 @@ class UVSimUI(GridLayout):
     # File selection layout (File input, Select file button)
     def _file_selection_layout(self) -> BoxLayout:
         self.file_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=13, padding=(10, 5))
-        self.file_layout.add_widget(Label(text="File:", size_hint_x=0.08))
+        self.file_layout.add_widget(Label(text="File:", size_hint_x=0.08, color=hex_to_rgba(self.color_scheme.colors["text"])))
         self.file_text_input = TextInput(text="", hint_text="Enter file name here, or select file:", multiline = False, size_hint=(0.5, 0.6), pos_hint={'center_x': 0.5, 'center_y': 0.5})
         self.file_layout.add_widget(self.file_text_input)
         self.select_file_btn = Button(text="Select a File", size_hint_x=0.2)
