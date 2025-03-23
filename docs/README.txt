@@ -35,6 +35,7 @@ GUI Usage Guide:
 - Right panel shows memory contents
 - Updated in real-time during execution
 - Locations 00-99 shown as [Location][Word] pairs
+- Words can be modified in the table (copy/paste function)
 5. Program Controls:
 - Save Button: Save current state to uvsim_save.txt
 - Quit Button: Exit application
