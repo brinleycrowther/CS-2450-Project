@@ -10,7 +10,7 @@ Installation:
 1. Ensure Python 3.x is installed.
 2. Install required dependencies:
    pip install kivy
-3. Download all project files (uvsim.py, accumulator.py, uvsim_gui.py)
+3. Download all src files (uvsim.py, accumulator.py, uvsim_gui.py, simtextinput.py, color_scheme.py, __init__.py)
 
 Running the GUI:
 1. Navigate to the directory containing the files
@@ -24,7 +24,7 @@ GUI Usage Guide:
 - Click "Select File" to choose a file from a file picker
 - Supported files: .txt with BasicML code
 2. Execute Program:
-- Execute Button: Run program continuously
+- Execute Button: Run entire program
 - Step Button: Execute one instruction at a time
 - Program counter shown in memory table
 3. Console Interaction:
@@ -38,10 +38,10 @@ GUI Usage Guide:
 - Locations 00-99 shown as [Location][Word] pairs
 - Words can be modified in the table (copy/paste function)
 5. Program Controls:
-- Save Button: Save current state to specified directory as default UVSim_output.txt
+- Save Button: Save current state to specified directory as default uvsim_save.txt
 - Quit Button: Exit application
 - Accumulator value displayed below controls
-- Reset App Button: Available once a file has run to completion. Resets program for additional use.
+- Reset App Button: Resets program for additional use (Available once a file has run to completion).
 
 Example GUI Session:
 1. Launch application
@@ -58,10 +58,11 @@ Example GUI Session:
 
 Key Features:
 - Graphical memory table with real-time updates
+- Customizable color schemes via config file
 - Step-through execution for debugging
 - Integrated console for input/output
 - Visual accumulator status display
-- One-click state saving
+- User-defined save locations
 - Responsive UI with clear error messages
 
 File Requirements
@@ -82,7 +83,7 @@ Example Valid File:
 
 Troubleshooting
 - Blank window: Verify Kivy installation
-- Input not working: Check active field (green border indicates focus)
+- Input not working: Check active field (colored border indicates focus)
 - Missing buttons: Resize window to ensure proper layout
 - Font rendering issues: Update graphics drivers
 - File loading failures: Use absolute paths (e.g., C:/path/to/file.txt)
