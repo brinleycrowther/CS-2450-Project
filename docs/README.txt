@@ -19,8 +19,9 @@ Running the GUI:
 
 GUI Usage Guide:
 1. Load a Program:
-- Type file path in "File:" text box
-- Click "Select File" or press Enter
+- Type file path in "File:" text box and press Enter
+  OR
+- Click "Select File" to choose a file from a file picker
 - Supported files: .txt with BasicML code
 2. Execute Program:
 - Execute Button: Run program continuously
@@ -37,9 +38,10 @@ GUI Usage Guide:
 - Locations 00-99 shown as [Location][Word] pairs
 - Words can be modified in the table (copy/paste function)
 5. Program Controls:
-- Save Button: Save current state to uvsim_save.txt
+- Save Button: Save current state to specified directory as default UVSim_output.txt
 - Quit Button: Exit application
 - Accumulator value displayed below controls
+- Reset App Button: Available once a file has run to completion. Resets program for additional use.
 
 Example GUI Session:
 1. Launch application
@@ -51,6 +53,8 @@ Example GUI Session:
    - Press Enter to continue
 6. View results in Console Output
 7. Click "Save" to export state when finished
+8. Click Reset App to run program again.
+9. Click Quit to exit.
 
 Key Features:
 - Graphical memory table with real-time updates
