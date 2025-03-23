@@ -329,15 +329,49 @@ class UVSimUI(GridLayout):
 
         for key, value in self.simulator.memory.items():
             is_current = (highlight_index is not None and int(key) == highlight_index)
-            loc = Button(text=str(key), disabled=True, background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1))
+            loc = Button(
+                text=str(key), 
+                disabled=True, 
+                # background_color=(0.8, 0.8, 0.8, 1) if is_current else (0.8, 0.8, 0.8, 1)
+                background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1)
+            )
             loc.disabled_color = (0, 0, 0, 1)
             loc.background_disabled_normal = ""
-            word = Button(text=value, disabled=True, background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1))
+
+            # Word input is editable
+            word = SimTextInput(
+                text=value, 
+                multiline=False,  # Keep single-line input
+                foreground_color=(0, 0, 0, 1),
+                text_key = key,
+                # background_color=(1, 1, 1, 1) if is_current else (0.8, 0.8, 0.8, 1)# White background for editable field
+                background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1)
+            )
+
             word.disabled_color = (0, 0, 0, 1)
             word.background_disabled_normal = ""
+
+            # Bind validation function
+            word.bind(on_text_validate=lambda instance, k=key: self.validate_and_store(k, instance))
+
             self.memory_table.add_widget(loc)
             self.memory_table.add_widget(word)
-        return 0
+
+    def validate_and_store(self, key, instance):
+        input_word = instance.text.strip()  # Get input and remove extra spaces
+
+        # Check if valid format
+        if input_word.startswith(("+", "-")) and len(input_word) == 5 and input_word[1:].isdigit():
+            pass  # Valid input
+        elif len(input_word) == 4 and input_word.isdigit():
+            input_word = f"+{input_word}"  # Assume positive if no sign is given
+        else:
+            instance.text = "0000"  # Clear invalid input
+            return  # Exit without saving
+
+        # Store valid input
+        self.simulator.memory[key] = input_word
+        instance.text = input_word  # Update text field with formatted input
 
     # Turns the file select button into a reset button at the end of program use
     def make_reset_button(self):
