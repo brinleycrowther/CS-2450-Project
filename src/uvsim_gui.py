@@ -11,12 +11,18 @@ from kivy.core.window import Window
 # from kivy.uix.popup import Popup
 # from threading import Thread
 import os
+from color_scheme import ColorScheme, ColorConfigPopup
 
+def hex_to_rgba(hex_color):
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16)/255 for i in (0, 2, 4)) + (1,)
 
 class UVSimUI(GridLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.cols = 2
+        self.color_scheme = ColorScheme()
+        self.apply_color_scheme()
 
         from uvsim import UVSim # lazy import to avoid circular import, keeps logic and ui separate
         self.simulator = UVSim(self) # pass UI instance to UVSim
@@ -25,13 +31,40 @@ class UVSimUI(GridLayout):
         self.right_half = self._right_half()
         self.add_widget(self.left_half)
         self.add_widget(self.right_half)
+    
+    def apply_color_scheme(self):
+        # Apply background color
+        self.background_color = hex_to_rgba(self.color_scheme.colors["secondary"])
+        Window.clearcolor = hex_to_rgba(self.color_scheme.colors["secondary"])
+
+    # Update primary color for buttons and other components
+        if hasattr(self, 'select_file_btn'):
+            self.select_file_btn.background_color = hex_to_rgba(self.color_scheme.colors["primary"])
+        if hasattr(self, 'execute_btn'):
+            self.execute_btn.background_color = hex_to_rgba(self.color_scheme.colors["primary"])
+        if hasattr(self, 'step_btn'):
+            self.step_btn.background_color = hex_to_rgba(self.color_scheme.colors["primary"])
+        if hasattr(self, 'save_btn'):
+            self.save_btn.background_color = hex_to_rgba(self.color_scheme.colors["primary"])
+        if hasattr(self, 'quit_btn'):
+            self.quit_btn.background_color = hex_to_rgba(self.color_scheme.colors["primary"])
+        if hasattr(self, 'settings_btn'):
+            self.settings_btn.background_color = hex_to_rgba(self.color_scheme.colors["primary"])
+
+        # Update memory table colors
+        if hasattr(self, 'memory_table'):
+            self.refresh_memory_table()
+
+    def update_colors(self):
+        self.apply_color_scheme()
+        self.refresh_memory_table()
 
     # Left side layout
     def _left_half(self) -> BoxLayout:
         self.left_layout = BoxLayout(orientation='vertical', size_hint=(0.6, 1))
 
-        # UVSim banner
-        self.app_banner = Label(text="UVSim", size_hint_y=0.25, font_size=80, halign='left', valign='middle', padding=(50, 0))
+         # UVSim banner
+        self.app_banner = Label(text="UVSim",size_hint_y=0.25,font_size=80,halign='left', valign='middle',padding=(50, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
         self.app_banner.bind(size=self.app_banner.setter('text_size'))
         self.left_layout.add_widget(self.app_banner)
         
@@ -61,10 +94,10 @@ class UVSimUI(GridLayout):
     # File selection layout (File input, Select file button)
     def _file_selection_layout(self) -> BoxLayout:
         self.file_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=13, padding=(10, 5))
-        self.file_layout.add_widget(Label(text="File:", size_hint_x=0.08))
-        self.file_text_input = TextInput(text="", hint_text="Enter file name here", multiline = False, size_hint=(0.5, 0.6), pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        self.file_layout.add_widget(Label(text="File:", size_hint_x=0.08, color=hex_to_rgba(self.color_scheme.colors["text"])))
+        self.file_text_input = TextInput(text="", hint_text="Enter file name here", multiline=False, size_hint=(0.5, 0.6), pos_hint={'center_x': 0.5, 'center_y': 0.5}, foreground_color=hex_to_rgba(self.color_scheme.colors["text"]))
         self.file_layout.add_widget(self.file_text_input)
-        self.select_file_btn = Button(text="Select File", size_hint_x=0.2)
+        self.select_file_btn = Button(text="Select File", size_hint_x=0.2, background_color=hex_to_rgba(self.color_scheme.colors["primary"]))
         
         self.select_file_btn.bind(on_press = self.file_handler)
         self.file_text_input.bind(on_text_validate = self.file_handler)
@@ -96,22 +129,32 @@ class UVSimUI(GridLayout):
     # Control buttons layout (Execute, Step, Stop, Save)
     def _control_buttons(self) -> BoxLayout:
         self.control_btn_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=(10, 5))
-        self.execute_btn = Button(text="Execute")
-        self.step_btn = Button(text="Step")
-        self.save_btn = Button(text="Save")
-        self.quit_btn = Button(text="Quit")
+        self.execute_btn = Button(text="Execute", background_color=hex_to_rgba(self.color_scheme.colors["primary"]))
+        self.step_btn = Button(text="Step", background_color=hex_to_rgba(self.color_scheme.colors["primary"]))
+        self.save_btn = Button(text="Save", background_color=hex_to_rgba(self.color_scheme.colors["primary"]))
+        self.quit_btn = Button(text="Quit", background_color=hex_to_rgba(self.color_scheme.colors["primary"]))
+        self.settings_btn = Button(text="Settings", background_color=hex_to_rgba(self.color_scheme.colors["primary"]))
         
         self.control_btn_layout.add_widget(self.execute_btn)
         self.control_btn_layout.add_widget(self.step_btn)
         self.control_btn_layout.add_widget(self.save_btn)
         self.control_btn_layout.add_widget(self.quit_btn)
+        self.control_btn_layout.add_widget(self.settings_btn)
 
-        self.execute_btn.bind(on_release = self.execute_handler)
-        self.step_btn.bind(on_release = self.step_handler)
-        self.save_btn.bind(on_release = self.save_handler)
-        self.quit_btn.bind(on_release = self.quit_handler)
+        self.execute_btn.bind(on_release=self.execute_handler)
+        self.step_btn.bind(on_release=self.step_handler)
+        self.save_btn.bind(on_release=self.save_handler)
+        self.quit_btn.bind(on_release=self.quit_handler)
+        self.settings_btn.bind(on_release=self.show_color_config)
 
         return self.control_btn_layout
+
+    def show_color_config(self, instance):
+        popup = ColorConfigPopup(
+            color_scheme=self.color_scheme,
+            callback=self.update_colors
+        )
+        popup.open()
     
     # Execute button's on_press functionality
     def execute_handler(self, instance):
@@ -144,7 +187,7 @@ class UVSimUI(GridLayout):
     # Program counter layout
     def _program_counter_layout(self) ->BoxLayout:
         self.pc_layout = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=0, padding=(20, 0))
-        self.pc_label = Label(text="Program Counter:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0))
+        self.pc_label = Label(text="Program Counter:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
         self.pc_label.bind(size=self.pc_label.setter('text_size'))
         self.pc_field = TextInput(text="Program Not Started", readonly=True, size_hint_y=0.4, padding=(20, 10))
         self.pc_layout.add_widget(self.pc_label)
@@ -158,7 +201,7 @@ class UVSimUI(GridLayout):
     # Accumulator layout
     def _accumulator_layout(self) -> BoxLayout:
         self.accumulator_layout = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=0, padding=(20, 0))
-        self.accumulator_label = Label(text="Accumulator:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0))
+        self.accumulator_label = Label(text="Accumulator:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
         self.accumulator_label.bind(size=self.accumulator_label.setter('text_size'))
         self.accumulator_field = TextInput(text="No value in accumulator...", readonly=True, size_hint_y=0.4, padding=(20, 10))
         self.accumulator_layout.add_widget(self.accumulator_label)
@@ -172,7 +215,7 @@ class UVSimUI(GridLayout):
     # Console Input layout
     def _console_input(self) -> BoxLayout:
         self.console_in_layout = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=0, padding=(20, 0))
-        self.console_label = Label(text="Console Input:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0))
+        self.console_label = Label(text="Console Input:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
         self.console_label.bind(size=self.console_label.setter('text_size'))
         self.console_input = TextInput(multiline=False, size_hint_y=0.4, padding=(20, 10), disabled=True)
         self.console_input.bind(on_text_validate=self.input_text_handler)
@@ -198,7 +241,7 @@ class UVSimUI(GridLayout):
     # Console Output layout
     def _console_output_layout(self) -> BoxLayout:
         self.console_out_layout = BoxLayout(orientation='vertical', spacing=10, padding=(20, 10))
-        self.console_label = Label(text="Console Output:", size_hint_y=0.08, font_size=30, halign='left', valign='middle', padding=(40, 0))
+        self.console_label = Label(text="Console Output:", size_hint_y=0.08, font_size=30, halign='left', valign='middle', padding=(40, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
         self.console_label.bind(size=self.console_label.setter('text_size'))
         self.console_scroller = ScrollView(bar_color=(0.2, 0.2, 0.2, 1), bar_width=10)
         self.console_output = TextInput(text="Welcome to UVSim!\nPlease load a file, then press Execute or Step to run.\n", multiline=True, readonly=True, size_hint=(1, None), padding=(10, 5))
@@ -228,7 +271,7 @@ class UVSimUI(GridLayout):
         self.right_layout = BoxLayout(orientation='vertical', size_hint=(0.4, 1), padding=(10, 10))
 
         # Memory label
-        self.memory_label = Label(text="Memory", size_hint_y=0.1, font_size=30, halign='left', valign='middle', padding=(50, 0))
+        self.memory_label = Label(text="Memory", size_hint_y=0.1, font_size=30, halign='left', valign='middle', padding=(50, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
         self.memory_label.bind(size=self.memory_label.setter('text_size'))
         self.right_layout.add_widget(self.memory_label)
 
@@ -275,22 +318,19 @@ class UVSimUI(GridLayout):
                 text=str(key), 
                 disabled=True, 
                 # background_color=(0.8, 0.8, 0.8, 1) if is_current else (0.8, 0.8, 0.8, 1)
-                background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1)
-            )
-            loc.disabled_color = (0, 0, 0, 1)
+                background_color=hex_to_rgba(self.color_scheme.colors["primary"]) if is_current else hex_to_rgba(self.color_scheme.colors["secondary"]), disabled_color=hex_to_rgba(self.color_scheme.colors["text"]))
             loc.background_disabled_normal = ""
 
             # Word input is editable
             word = SimTextInput(
-                text=value, 
-                multiline=False,  # Keep single-line input
-                foreground_color=(0, 0, 0, 1),
-                text_key = key,
-                # background_color=(1, 1, 1, 1) if is_current else (0.8, 0.8, 0.8, 1)# White background for editable field
-                background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1)
+                text=value,
+                multiline=False,
+                foreground_color=hex_to_rgba(self.color_scheme.colors["text"]),
+                text_key=key,
+                background_color=hex_to_rgba(self.color_scheme.colors["primary"]) if is_current else hex_to_rgba(self.color_scheme.colors["secondary"])
             )
 
-            word.disabled_color = (0, 0, 0, 1)
+            word.disabled_color = hex_to_rgba(self.color_scheme.colors["text"])
             word.background_disabled_normal = ""
 
             # Bind validation function
