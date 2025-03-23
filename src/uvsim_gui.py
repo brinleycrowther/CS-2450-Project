@@ -417,6 +417,39 @@ class UVSimUI(GridLayout):
         # Store valid input
         self.simulator.memory[key] = input_word
         instance.text = input_word  # Update text field with formatted input
+
+    # Turns the file select button into a reset button at the end of program use
+    def make_reset_button(self):
+        self.select_file_btn.disabled = False
+        self.select_file_btn.text = "Reset App"
+        self.select_file_btn.unbind(on_release = self.popup_file_chooser)
+        self.select_file_btn.bind(on_release = self.reset_handler)
+        return 0
+    
+    # Reset button functionality to reset the app and GUI to original states
+    def reset_handler(self, instance):
+
+        self.file_text_input.text = ""
+        self.file_text_input.hint_text = "Enter file name here, or select file:"
+        self.file_text_input.disabled = False
+
+        self.select_file_btn.text = "Select a File"
+        self.select_file_btn.unbind(on_release = self.reset_handler)
+        self.select_file_btn.bind(on_release = self.popup_file_chooser)
+        self.select_file_btn.disabled = False
+
+        self.console_input.text = ""
+        self.console_input.disabled = True
+
+        self.console_output.text = "Welcome to UVSim!\nPlease load a file, then press Execute or Step to run.\n"
+        self.console_output.cursor = (0, 0)
+
+        self.accumulator_field.text = "No value in accumulator..."
+        self.pc_field.text = "Program Not Started"
+        self.simulator.reset()
+        self.refresh_memory_table(0)
+
+        return 0
         
 """
 class UVSimApp(App):
