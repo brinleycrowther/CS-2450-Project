@@ -22,7 +22,9 @@ GUI Usage Guide:
 - Type file path in "File:" text box and press Enter
   OR
 - Click "Select File" to choose a file from a file picker
+- Modify values directly in the memory table (Can use Cut/Copy/Paste)
 - Supported files: .txt with BasicML code
+- Invalid inputs (non-4-digit values) are automatically rejected
 2. Execute Program:
 - Execute Button: Run entire program
 - Step Button: Execute one instruction at a time
