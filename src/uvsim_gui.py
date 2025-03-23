@@ -377,8 +377,9 @@ class UVSimUI(GridLayout):
                 text=str(key), 
                 disabled=True, 
                 # background_color=(0.8, 0.8, 0.8, 1) if is_current else (0.8, 0.8, 0.8, 1)
-                background_color=hex_to_rgba(self.color_scheme.colors["primary"]) if is_current else hex_to_rgba(self.color_scheme.colors["secondary"]), disabled_color=hex_to_rgba(self.color_scheme.colors["text"])
-                background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1)
+                background_color=hex_to_rgba(self.color_scheme.colors["primary"]) if is_current else hex_to_rgba(self.color_scheme.colors["secondary"]), 
+                disabled_color=hex_to_rgba(self.color_scheme.colors["text"]),
+                #background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1)
             )
             loc.disabled_color = (0, 0, 0, 1)
             loc.background_disabled_normal = ""
@@ -422,7 +423,7 @@ class UVSimUI(GridLayout):
     def make_reset_button(self):
         self.select_file_btn.disabled = False
         self.select_file_btn.text = "Reset App"
-        self.select_file_btn.unbind(on_release = self.popup_file_chooser)
+        self.select_file_btn.unbind(on_release = self._popup_file_chooser)
         self.select_file_btn.bind(on_release = self.reset_handler)
         return 0
     
@@ -435,7 +436,7 @@ class UVSimUI(GridLayout):
 
         self.select_file_btn.text = "Select a File"
         self.select_file_btn.unbind(on_release = self.reset_handler)
-        self.select_file_btn.bind(on_release = self.popup_file_chooser)
+        self.select_file_btn.bind(on_release = self._popup_file_chooser)
         self.select_file_btn.disabled = False
 
         self.console_input.text = ""
