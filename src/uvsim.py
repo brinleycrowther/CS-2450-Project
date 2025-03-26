@@ -21,7 +21,7 @@ class UVSim:
         self.log = [] # tracks log of program
         self.memSpace = 0 # where program counter will continue
         self.counter = 0 # tracks where in what word is being processed in memory
-        self.memory = {i: "0000" for i in range(100)} # tracks and updates memory location. e.g. 00: +1234
+        self.memory = {i: "000000" for i in range(100)} # tracks and updates memory location. e.g. 00: +123456
         self.accum = Accumulator(self.memory)
         self.record = True
 
@@ -35,6 +35,10 @@ class UVSim:
                     for word in words:
                         word = word.strip('\n')
                         lineNum += 1 # increments line number for each word
+
+                        digits = self.detect_format(word)
+                        if digits == 4:
+                            word = self.convert_to_six_digts(word)
 
                         # loads each word into corresponding memory space    
                         self.memory[self.memSpace] = word
@@ -56,18 +60,24 @@ class UVSim:
     # grabs word from file, splits sign, splits first two digits(function) from last two digits(value)
     # uses accumulator functions to process the word
     def wordProcess(self, step = False):
-        if len(self.log) > 0 and self.log[-1] == "+4300 : Program halted":
+        if len(self.log) > 0 and self.log[-1] == "+430000 : Program halted":
             self.update_console("Program halted.\nPress save to save state to a text file, and Quit to exit.")
             return
-
+        
         # goes through each space in memory and processes the word
         while self.counter < self.memSpace:
             #self.ui.refresh_memory_table(self.counter - 1)
             value = self.memory[self.counter]
             self.counter += 1
             sign = value[0] if value[0] in ('+', '-') else '+'
-            operation = value[1:3] if sign in ('+', '-') else value[:2]
-            location = value[3:] if sign in ('+', '-') else value[2:]
+            leading_zeros = True if value[1:3] == "00" or value[:2] == "00"  else False
+
+            if leading_zeros:
+                operation = value[3:5] if sign in ('+', '-') else value[2:4]
+                location = value[5:] if sign in ('+', '-') else value[4:]
+            else:
+                operation = value[1:3] if sign in ('+', '-') else value[:2]
+                location = value[3:] if sign in ('+', '-') else value[2:]
 
             # takes OpCode and passes location and sign of word to its function
             if operation == "10":
@@ -126,6 +136,8 @@ class UVSim:
             self.waiting_for_input = None  # Clear state
 
             read_return = self.accum.read(location, input_word)
+            print(read_return)
+            #read_return = self.convert_to_six_digts(read_return)
             if read_return == -1:
                 self.update_console("Invalid word.")
                 self.counter -= 1 # decrements counter to reprocess word
@@ -241,7 +253,7 @@ class UVSim:
         self.log.append("Program reset.")
         self.memSpace = 0
         self.counter = 0
-        self.memory = {i: "0000" for i in range(100)}
+        self.memory = {i: "000000" for i in range(100)} # update to 6 digits
         self.accum = Accumulator(self.memory)
 
     # quits program
@@ -249,6 +261,24 @@ class UVSim:
         App.get_running_app().stop()
         Window.close()
         exit()
+
+    # converts word to 6 digits
+    def convert_to_six_digts(self, word):
+        if len(word) == 4:
+            return "00" + word
+        if len(word) == 5:
+            return word[0] + "00" + word[1:]
+
+    
+    # detects how many digits the word is
+    def detect_format(self, line):
+        length = len(line.strip())
+        if length == 4 or length == 5:
+            return 4
+        elif length == 6 or length == 7:
+            return 6
+        else:
+            raise ValueError(f"{line} contains an invalid number of digits.")
 
 class MyUVSimApp(App):
     def build(self):

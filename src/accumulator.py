@@ -4,7 +4,7 @@ class Accumulator:
     def __init__(self, memory=None):
         self.currVal = 0
         if memory is None:
-           self.memory = {i:"0000" for i in range(100)}
+           self.memory = {i:"000000" for i in range(100)}
         else:
             self.memory = memory
 
@@ -13,10 +13,10 @@ class Accumulator:
             #input_word = input("Enter word: ").strip()
 
             # Check for sign followed by four numbers
-            if input_word.startswith(("+", "-")) and len(input_word) == 5 and input_word[1:].isdigit():
+            if input_word.startswith(("+", "-")) and len(input_word) == 7 and input_word[1:].isdigit():
                 break
             # Check for four numbers
-            elif len(input_word) == 4 and input_word.isdigit():
+            elif len(input_word) == 6 and input_word.isdigit():
                 input_word = f"+{input_word}"  # Assume positive if no sign given
                 break
             else:
