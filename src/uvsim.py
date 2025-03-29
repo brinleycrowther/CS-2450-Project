@@ -21,7 +21,7 @@ class UVSim:
         self.log = [] # tracks log of program
         self.memSpace = 0 # where program counter will continue
         self.counter = 0 # tracks where in what word is being processed in memory
-        self.memory = {i: "000000" for i in range(100)} # tracks and updates memory location. e.g. 00: +123456
+        self.memory = {i: "000000" for i in range(250)} # tracks and updates memory location. e.g. 00: +123456
         self.accum = Accumulator(self.memory)
         self.record = True
 
@@ -56,10 +56,12 @@ class UVSim:
         else:
             self.update_console("Invalid file.")
             return -1
+
     
     # grabs word from file, splits sign, splits first two digits(function) from last two digits(value)
     # uses accumulator functions to process the word
     def wordProcess(self, step = False):
+        print(f"Executing instruction at {self.counter}: {self.memory[self.counter]}")
         if len(self.log) > 0 and self.log[-1] == "+430000 : Program halted":
             self.update_console("Program halted.\nPress save to save state to a text file, and Quit to exit.")
             return
@@ -69,50 +71,46 @@ class UVSim:
             #self.ui.refresh_memory_table(self.counter - 1)
             value = self.memory[self.counter]
             self.counter += 1
+            
+            # Updated parsing logic for 6-digit format
             sign = value[0] if value[0] in ('+', '-') else '+'
-            leading_zeros = True if value[1:3] == "00" or value[:2] == "00"  else False
-
-            if leading_zeros:
-                operation = value[3:5] if sign in ('+', '-') else value[2:4]
-                location = value[5:] if sign in ('+', '-') else value[4:]
-            else:
-                operation = value[1:3] if sign in ('+', '-') else value[:2]
-                location = value[3:] if sign in ('+', '-') else value[2:]
+            operation = value[1:4]  # Directly extract 3 digits for operation code
+            location = value[4:]    # Extract remaining 3 digits for memory address
 
             # takes OpCode and passes location and sign of word to its function
-            if operation == "10":
+            if operation == "010":
                 self.update_console("Enter word into Console Input, then press Enter.")
                 self.ui.focus_console_input()
                 self.ui.refresh_memory_table(highlight_index=(self.counter-1))
                 self.waiting_for_input = [location, value, step]
                 return # makes program wait for input
-            elif operation == "11":
+            elif operation == "011":
                 self.log.append(f'{value} : {self.accum.write(location, sign)} output from {location} in memory onto terminal')
-            elif operation == "20":
+            elif operation == "020":
                 self.accum.load(location, sign)
                 self.log.append(f'{value} : {self.memory[int(location)]} loaded into accumulator')
-            elif operation == "21":
+            elif operation == "021":
                 self.accum.store(location, sign)
                 self.log.append(f'{value} : {self.memory[int(location)]} stored into {location} in memory')
-            elif operation == "30":
+            elif operation == "030":
                 self.accum.add(location, sign)
                 self.log.append(f'{value} : Accumulator added to {self.memory[int(location)]} from {location} in memory')
-            elif operation == "31":
+            elif operation == "031":
                 self.accum.subtract(location, sign)
                 self.log.append(f'{value} : Accumulator subtracted by {self.memory[int(location)]} from {location} in memory')
-            elif operation == "32":
+            elif operation == "032":
                 self.accum.divide(location, sign)
                 self.log.append(f'{value} : Accumulator divded by {self.memory[int(location)]} from {location} in memory')
-            elif operation == "33":
+            elif operation == "033":
                 self.accum.multiply(location, sign)
                 self.log.append(f'{value} : Accumulator multiplied by {self.memory[int(location)]} from {location} in memory')
-            elif operation == "40":
+            elif operation == "040":
                 self.branch(location)
-            elif operation == "41":
+            elif operation == "041":
                 self.branchneg(location)
-            elif operation == "42":
+            elif operation == "042":
                 self.branchzero(location)
-            elif operation == "43":
+            elif operation == "043":
                 self.update_console(f'{value} : Program halted.\nPress Save to save current memory to a text file, and Quit to exit.')
                 self.log.append(f'{value} : Program halted')
                 Clock.schedule_once(lambda dt: self.ui.update_program_counter(self.counter-1))
@@ -222,8 +220,10 @@ class UVSim:
         if self.accum.currVal == 0:
             return "No value in accumulator..."
         else:
-            return str(self.accum.currVal)
-    
+            # Format with sign and leading zeros (like memory values)
+            sign = '+' if self.accum.currVal >= 0 else '-'
+            return f"{sign}{abs(self.accum.currVal):06d}"  # Outputs "+001801" instead of "1801"
+        
     # outputs accumulator value and memory into .txt file
     def saveMemory(self, file_path):
         try:
@@ -253,7 +253,7 @@ class UVSim:
         self.log.append("Program reset.")
         self.memSpace = 0
         self.counter = 0
-        self.memory = {i: "000000" for i in range(100)} # update to 6 digits
+        self.memory = {i: "000000" for i in range(250)} # update to 6 digits & 250 memory
         self.accum = Accumulator(self.memory)
 
     # quits program
@@ -264,10 +264,13 @@ class UVSim:
 
     # converts word to 6 digits
     def convert_to_six_digts(self, word):
+        """Converts 4-digit words to 6-digit format."""
         if len(word) == 4:
-            return "00" + word
-        if len(word) == 5:
-            return word[0] + "00" + word[1:]
+            sign = "+" if word[0].isdigit() else word[0]
+            opcode = word[1:3].zfill(3)  # Pad to 3 digits for operation code
+            address = word[3:].zfill(3)  # Pad to 3 digits for address
+            return f"{sign}{opcode}{address}"
+        return word
 
     
     # detects how many digits the word is
