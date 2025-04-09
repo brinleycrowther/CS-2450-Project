@@ -4,7 +4,7 @@ class Accumulator:
     def __init__(self, memory=None):
         self.currVal = 0
         if memory is None:
-           self.memory = {i:"000000" for i in range(100)}
+           self.memory = {i:"000000" for i in range(250)}  # memory location extended
         else:
             self.memory = memory
 
@@ -37,7 +37,10 @@ class Accumulator:
 
     # 21.. STORES word from accumulator into specific location in memory(loc)
     def store(self, loc, sign):
-        self.memory[int(loc)] = str(self.currVal)
+        # Format with sign and 6 digits
+        sign_char = '+' if self.currVal >= 0 else '-'
+        formatted_val = f"{sign_char}{abs(self.currVal):06d}"
+        self.memory[int(loc)] = formatted_val
 
     # 30.. ADDS value from specific location in memory(loc) to accumulator currVal
     def add(self, loc, sign):
@@ -50,7 +53,7 @@ class Accumulator:
     # 32.. DIVIDES value from specific location in memory(loc) from accumulator currVal
     def divide(self, loc, sign):
         try:
-            self.currVal /= int(self.memory[int(loc)])
+            self.currVal //= int(self.memory[int(loc)])
         except ZeroDivisionError:
             print("Error: Cannot divide by zero.")
 

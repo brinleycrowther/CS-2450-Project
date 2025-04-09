@@ -21,11 +21,8 @@ class ColorScheme:
         self.load()
 
     def load(self):
-        try:
-            with open(self.config_path, 'r') as f:
-                self.colors.update(json.load(f))
-        except FileNotFoundError:
-            self.save()
+        self.colors = self.DEFAULT_COLORS.copy()
+        self.save()
 
     def save(self):
         with open(self.config_path, 'w') as f:
