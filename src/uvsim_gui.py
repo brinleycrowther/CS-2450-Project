@@ -141,7 +141,7 @@ class UVSimUI(Screen):
 
     # File selection layout (File input, Select file button)
     def _file_selection_layout(self) -> BoxLayout:
-        self.file_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=13, padding=(10, 5))
+        self.file_layout = BoxLayout(orientation='horizontal', size_hint_y=0.25, spacing=13, padding=(10, 5))
         self.file_layout.add_widget(Label(text="File:", size_hint_x=0.08, color=hex_to_rgba(self.color_scheme.colors["text"])))
         self.file_text_input = TextInput(text="", hint_text="Enter file name here, or select file:", multiline = False, size_hint=(0.5, 0.6), pos_hint={'center_x': 0.5, 'center_y': 0.5})
         self.file_layout.add_widget(self.file_text_input)
@@ -297,7 +297,7 @@ class UVSimUI(Screen):
 
     # Program counter layout
     def _program_counter_layout(self) ->BoxLayout:
-        self.pc_layout = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=0, padding=(20, 0))
+        self.pc_layout = BoxLayout(orientation='vertical', size_hint_y=0.3, spacing=0, padding=(20, 0))
         self.pc_label = Label(text="Program Counter:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
         self.pc_label.bind(size=self.pc_label.setter('text_size'))
         self.pc_field = TextInput(text="Program Not Started", readonly=True, size_hint_y=0.4, padding=(20, 10))
@@ -311,7 +311,7 @@ class UVSimUI(Screen):
         
     # Accumulator layout
     def _accumulator_layout(self) -> BoxLayout:
-        self.accumulator_layout = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=0, padding=(20, 0))
+        self.accumulator_layout = BoxLayout(orientation='vertical', size_hint_y=0.3, spacing=0, padding=(20, 0))
         self.accumulator_label = Label(text="Accumulator:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
         self.accumulator_label.bind(size=self.accumulator_label.setter('text_size'))
         self.accumulator_field = TextInput(text="No value in accumulator...", readonly=True, size_hint_y=0.4, padding=(20, 10))
@@ -328,7 +328,7 @@ class UVSimUI(Screen):
         self.console_in_layout = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=0, padding=(20, 0))
         self.console_label = Label(text="Console Input:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
         self.console_label.bind(size=self.console_label.setter('text_size'))
-        self.console_input = TextInput(multiline=False, size_hint_y=0.4, padding=(20, 10), disabled=True)
+        self.console_input = TextInput(multiline=False, size_hint_y=0.5, padding=(20, 10), disabled=True)
         self.console_input.bind(on_text_validate=self.input_text_handler)
         self.console_in_layout.add_widget(self.console_label)
         self.console_in_layout.add_widget(self.console_input)
@@ -352,7 +352,7 @@ class UVSimUI(Screen):
     # Console Output layout
     def _console_output_layout(self) -> BoxLayout:
         self.console_out_layout = BoxLayout(orientation='vertical', spacing=10, padding=(20, 10))
-        self.console_label = Label(text="Console Output:", size_hint_y=0.08, font_size=30, halign='left', valign='middle', padding=(40, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
+        self.console_label = Label(text="Console Output:", size_hint_y=0.15, font_size=30, halign='left', valign='middle', padding=(40, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
         self.console_label.bind(size=self.console_label.setter('text_size'))
         self.console_scroller = ScrollView(bar_color=(0.2, 0.2, 0.2, 1), bar_width=10)
         self.console_output = TextInput(text="Welcome to UVSim!\nPlease load a file, then press Execute or Step to run.\n", multiline=True, readonly=True, size_hint=(1, None), padding=(10, 5))
@@ -431,7 +431,9 @@ class UVSimUI(Screen):
                 # background_color=(0.8, 0.8, 0.8, 1) if is_current else (0.8, 0.8, 0.8, 1)
                 background_color=hex_to_rgba(self.color_scheme.colors["primary"]) if is_current else hex_to_rgba(self.color_scheme.colors["secondary"]), 
                 disabled_color=hex_to_rgba(self.color_scheme.colors["text"]),
-                #background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1)
+                #background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1),
+                size_hint_y=None,
+                height=30
             )
             loc.disabled_color = (0, 0, 0, 1)
             loc.background_disabled_normal = ""
