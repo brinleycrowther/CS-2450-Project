@@ -69,7 +69,7 @@ class UVSim:
 
         if self.counter >= 250:
             self.update_console("Error: Program counter out of bounds (000-249).")  # Prevents execution from going beyond the valid memory range
-
+        
         if len(self.log) > 0 and self.log[-1] == "+430000 : Program halted":
             self.update_console("Program halted.\nPress save to save state to a text file, and Quit to exit.")
             return
