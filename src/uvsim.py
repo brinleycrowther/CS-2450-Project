@@ -21,7 +21,7 @@ class UVSim:
         self.log = [] # tracks log of program
         self.memSpace = 0 # where program counter will continue
         self.counter = 0 # tracks where in what word is being processed in memory
-        self.memory = {i: "000000" for i in range(250)} # tracks and updates memory location. e.g. 00: +123456
+        self.memory = {i: "000000" for i in range(250)} # tracks and updates memory location. e.g. 00: +123456 and memory limit of 250 lines
         self.accum = Accumulator(self.memory)
         self.record = True
 
@@ -32,10 +32,14 @@ class UVSim:
             try:
                 with open(inputFile, 'r') as file: # reads file
                     words = file.readlines()
+                    if len(words) > 250:
+                        self.update_console("Error: File contains more than 250 lines.")  # Rejects 250-line files
+                        return -1
+                    
                     for word in words:
                         word = word.strip('\n')
                         lineNum += 1 # increments line number for each word
-
+                        
                         digits = self.detect_format(word)
                         if digits == 4:
                             word = self.convert_to_six_digts(word)
@@ -62,6 +66,10 @@ class UVSim:
     # uses accumulator functions to process the word
     def wordProcess(self, step = False):
         print(f"Executing instruction at {self.counter}: {self.memory[self.counter]}")
+
+        if self.counter >= 250:
+            self.update_console("Error: Program counter out of bounds (000-249).")  # Prevents execution from going beyond the valid memory range
+
         if len(self.log) > 0 and self.log[-1] == "+430000 : Program halted":
             self.update_console("Program halted.\nPress save to save state to a text file, and Quit to exit.")
             return
@@ -75,7 +83,11 @@ class UVSim:
             # Updated parsing logic for 6-digit format
             sign = value[0] if value[0] in ('+', '-') else '+'
             operation = value[1:4]  # Directly extract 3 digits for operation code
-            location = value[4:]    # Extract remaining 3 digits for memory address
+            location = int(value[4:])    # Extract remaining 3 digits for memory address
+
+            if location < 0 or location >= 250:
+                self.update_console(f"Error: Invalid memory reference {location} (must be 000-249).")  # instructions only reference valid memory addresses (000-249)
+                return
 
             # takes OpCode and passes location and sign of word to its function
             if operation == "010":
@@ -265,13 +277,29 @@ class UVSim:
     # converts word to 6 digits
     def convert_to_six_digts(self, word):
         """Converts 4-digit words to 6-digit format."""
-        if len(word) == 4:
-            sign = "+" if word[0].isdigit() else word[0]
-            opcode = word[1:3].zfill(3)  # Pad to 3 digits for operation code
-            address = word[3:].zfill(3)  # Pad to 3 digits for address
+        has_sign = len(word) > 0 and word[0] in '+-'
+        if (has_sign and len(word) == 5) or (not has_sign and len(word) == 4):
+            sign = word[0] if has_sign else '+'
+            digits = word[1:] if has_sign else word
+            digits = digits.ljust(4, '0')[:4]  # Ensure 4 digits, pad if needed
+            opcode = digits[:2].zfill(3)  # First two digits as opcode, pad to 3
+            address = digits[2:].zfill(3)  # Last two as address, pad to 3
             return f"{sign}{opcode}{address}"
         return word
 
+    # Add the save_converted_program method in the UVSim class
+    def save_converted_program(self, file_path):
+        """Saves the converted 6-digit program to a file."""
+        try:
+            with open(file_path, 'w') as file:
+                for loc in range(self.memSpace):
+                    word = self.memory[loc]
+                    file.write(f"{word}\n")
+            self.update_console(f"Converted program saved to {file_path}")
+            return 0
+        except Exception as e:
+            self.update_console(f'Error saving converted program: {e}')
+            return -1
     
     # detects how many digits the word is
     def detect_format(self, line):
