@@ -69,7 +69,7 @@ class UVSim:
 
         if self.counter >= 250:
             self.update_console("Error: Program counter out of bounds (000-249).")  # Prevents execution from going beyond the valid memory range
-        
+
         if len(self.log) > 0 and self.log[-1] == "+430000 : Program halted":
             self.update_console("Program halted.\nPress save to save state to a text file, and Quit to exit.")
             return
@@ -282,8 +282,8 @@ class UVSim:
             sign = word[0] if has_sign else '+'
             digits = word[1:] if has_sign else word
             digits = digits.ljust(4, '0')[:4]  # Ensure 4 digits, pad if needed
-            opcode = digits[:2].zfill(3)       # First two digits as opcode, pad to 3
-            address = digits[2:].zfill(3)      # Last two as address, pad to 3
+            opcode = digits[:2].zfill(3)  # First two digits as opcode, pad to 3
+            address = digits[2:].zfill(3)  # Last two as address, pad to 3
             return f"{sign}{opcode}{address}"
         return word
 
