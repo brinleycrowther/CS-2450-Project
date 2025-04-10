@@ -12,6 +12,7 @@ from pathlib import Path # used to check if file is in path
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.clock import Clock
+from kivy.uix.screenmanager import ScreenManager, Screen
 import os
 from uvsim_gui import UVSimUI
 
@@ -282,10 +283,35 @@ class UVSim:
 
 class MyUVSimApp(App):
     def build(self):
-        ui = UVSimUI()
-        simulator = UVSim(ui)
+        self.screen_counter = 1
+        self.ui = ScreenManager()
+        
+        # Add first screen to the screen manager
+        first_screen = UVSimUI(name='New File 1')
+        self.ui.add_widget(first_screen)
 
-        return ui
+        self.update_all_spinners()  # Update spinners with the first screen
+
+        return self.ui
+    
+    def add_new_screen(self):
+        # Create a new screen and add it to the screen manager
+        self.screen_counter += 1
+        screen = UVSimUI(name=f'New File {self.screen_counter}')
+        self.ui.add_widget(screen)
+
+        # Go to the new screen
+        self.ui.current = f'New File {self.screen_counter}'
+
+        # Update all dropdown spinners to include the new screen
+        self.update_all_spinners()
+
+    def update_all_spinners(self):
+        screen_names = [screen.name for screen in self.ui.screens]
+        for screen in self.ui.screens:
+            screen.update_screen_spinner(screen_names)
+
+    
 
 if __name__ == '__main__':
     MyUVSimApp().run() # starts UI
