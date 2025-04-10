@@ -277,13 +277,29 @@ class UVSim:
     # converts word to 6 digits
     def convert_to_six_digts(self, word):
         """Converts 4-digit words to 6-digit format."""
-        if len(word) == 4:
-            sign = "+" if word[0].isdigit() else word[0]
-            opcode = word[1:3].zfill(3)  # Pad to 3 digits for operation code
-            address = word[3:].zfill(3)  # Pad to 3 digits for address
+        has_sign = len(word) > 0 and word[0] in '+-'
+        if (has_sign and len(word) == 5) or (not has_sign and len(word) == 4):
+            sign = word[0] if has_sign else '+'
+            digits = word[1:] if has_sign else word
+            digits = digits.ljust(4, '0')[:4]  # Ensure 4 digits, pad if needed
+            opcode = digits[:2].zfill(3)  # First two digits as opcode, pad to 3
+            address = digits[2:].zfill(3)  # Last two as address, pad to 3
             return f"{sign}{opcode}{address}"
         return word
 
+    # Add the save_converted_program method in the UVSim class
+    def save_converted_program(self, file_path):
+        """Saves the converted 6-digit program to a file."""
+        try:
+            with open(file_path, 'w') as file:
+                for loc in range(self.memSpace):
+                    word = self.memory[loc]
+                    file.write(f"{word}\n")
+            self.update_console(f"Converted program saved to {file_path}")
+            return 0
+        except Exception as e:
+            self.update_console(f'Error saving converted program: {e}')
+            return -1
     
     # detects how many digits the word is
     def detect_format(self, line):
