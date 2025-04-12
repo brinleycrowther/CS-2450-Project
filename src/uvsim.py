@@ -24,6 +24,7 @@ class UVSim:
         self.memory = {i: "000000" for i in range(250)} # tracks and updates memory location. e.g. 00: +123456 and memory limit of 250 lines
         self.accum = Accumulator(self.memory)
         self.record = True
+        self.original_file_content = ""
 
     # asks for file. validates file. proccesses each word into memory
     def fileInputToMemory(self, inputFile):
@@ -32,6 +33,8 @@ class UVSim:
             try:
                 with open(inputFile, 'r') as file: # reads file
                     words = file.readlines()
+                    self.original_file_content = ''.join(words)
+                    
                     if len(words) > 250:
                         self.update_console("Error: File contains more than 250 lines.")  # Rejects 250-line files
                         return -1
