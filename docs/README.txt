@@ -21,10 +21,10 @@ GUI Usage Guide:
 1. Load a Program:
 - Type file path in "File:" text box and press Enter
   OR
-- Click "Select File" to choose a file from a file picker
+- Click "Select A File" to choose a file from a file picker
 - Modify values directly in the memory table (Can use Cut/Copy/Paste)
-- Supported files: .txt with BasicML code
-- Invalid inputs (non-4-digit values) are automatically rejected
+- Supported files: .txt with BasicML code (4 or 6 digit words)
+- Invalid inputs are automatically rejected
 2. Execute Program:
 - Execute Button: Run entire program
 - Step Button: Execute one instruction at a time
@@ -32,23 +32,27 @@ GUI Usage Guide:
 3. Console Interaction:
 - During READ operations:
    1. Console Input field becomes active
-   2. Enter 4-digit values (+/-1234 format)
+   2. Enter 6-digit values (+/-123456 format)
    3. Press Enter to submit
 4. Memory Display:
 - Right panel shows memory contents
 - Updated in real-time during execution
-- Locations 00-99 shown as [Location][Word] pairs
+- Locations 00-249 shown as [Location][Word] pairs
 - Words can be modified in the table (copy/paste function)
 5. Program Controls:
 - Save Button: Save current state to specified directory as default uvsim_save.txt
 - Quit Button: Exit application
 - Accumulator value displayed below controls
 - Reset App Button: Resets program for additional use (Available once a file has run to completion).
+6. Run Another Program:
+- Select "New Tab+"
+- Switch between files by selecting the black tabs box for drop down menu
+- Run program as directed above
 
 Example GUI Session:
 1. Launch application
 2. Enter "test_program.txt" in File field
-3. Click "Select File"
+3. Click "Select A File"
 4. Click "Step" to execute instructions one-by-one
 5. When READ operation occurs:
    - Type input value in Console Input
@@ -69,19 +73,19 @@ Key Features:
 
 File Requirements
 1. .txt extension required.
-2. One 4-digit word per line:
-   - Instructions: Start with + followed by 4 digits (e.g., +1007)
-   - Data: May use +/- (e.g., -5678)
-3. Maximum 100 lines
+2. One 6-digit word per line:
+   - Instructions: Start with + followed by 6 digits (e.g., +001007)
+   - Data: May use +/- (e.g., -005678)
+3. Maximum 250 lines
 
 Example Valid File:
-+1007  # READ to 07
-+1008  # READ to 08
-+2007  # LOAD from 07
-+3008  # ADD from 08
-+2109  # STORE to 09
-+1109  # WRITE from 09
-+4300  # HALT
++001007  & +100007 # READ to 07
++001008  & +100008 # READ to 08
++002007  & +200007 # LOAD from 07
++003008  & +300008 # ADD from 08
++002109 & +210009 # STORE to 09
++001109  & +110009 # WRITE from 09
++004300  & +430000 # HALT
 
 Troubleshooting
 - Blank window: Verify Kivy installation

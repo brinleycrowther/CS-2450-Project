@@ -1,4 +1,4 @@
-# from kivy.app import App
+from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
@@ -9,6 +9,8 @@ from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 from kivy.uix.filechooser import FileChooserIconView
 from kivy.uix.popup import Popup
+from kivy.uix.screenmanager import Screen, ScreenManager
+from kivy.uix.spinner import Spinner
 from kivy.clock import Clock
 from kivy.graphics import Color, Rectangle
 # from threading import Thread
@@ -19,20 +21,31 @@ def hex_to_rgba(hex_color):
     hex_color = hex_color.lstrip('#')
     return tuple(int(hex_color[i:i+2], 16)/255 for i in (0, 2, 4)) + (1,)
 
-class UVSimUI(GridLayout):
+class UVSimUI(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.cols = 2
-        self.color_scheme = ColorScheme()
-        self.apply_color_scheme()
 
         from uvsim import UVSim # lazy import to avoid circular import, keeps logic and ui separate
         self.simulator = UVSim(self) # pass UI instance to UVSim
+        self.original_name = self.name # attribute 'self.name' is part of the Screen class, which returns the name of the current screen.
+        self.file = None
+        
+        self.app_layout = self._main_layout()
+        self.add_widget(self.app_layout)
+    
+    def _main_layout(self) -> BoxLayout: #create main layout for the screen
+        self.main_layout = BoxLayout(orientation='horizontal', size_hint=(1, 1))
+        self.main_layout.cols = 2
+
+        self.color_scheme = ColorScheme()
+        self.apply_color_scheme()
 
         self.left_half = self._left_half()
         self.right_half = self._right_half()
-        self.add_widget(self.left_half)
-        self.add_widget(self.right_half)
+        self.main_layout.add_widget(self.left_half)
+        self.main_layout.add_widget(self.right_half)
+
+        return self.main_layout
     
     def apply_color_scheme(self):
         # Apply background color
@@ -40,6 +53,8 @@ class UVSimUI(GridLayout):
         Window.clearcolor = hex_to_rgba(self.color_scheme.colors["secondary"])
 
     # Update primary color for buttons and other components
+        if hasattr(self, 'add_screen_btn'):
+            self.add_screen_btn.background_color = hex_to_rgba(self.color_scheme.colors["primary"])
         if hasattr(self, 'select_file_btn'):
             self.select_file_btn.background_color = hex_to_rgba(self.color_scheme.colors["primary"])
         if hasattr(self, 'execute_btn'):
@@ -68,9 +83,12 @@ class UVSimUI(GridLayout):
         self.left_layout = BoxLayout(orientation='vertical', size_hint=(0.6, 1))
 
          # UVSim banner
-        self.app_banner = Label(text="UVSim",size_hint_y=0.25,font_size=80,halign='left', valign='middle',padding=(50, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
+        self.app_banner = Label(text="UVSim",size_hint_y=0.25,font_size=80,halign='left', valign='middle',padding=(50, 0), color=hex_to_rgba(self.color_scheme.colors["primary"]), italic=True, bold=True)
         self.app_banner.bind(size=self.app_banner.setter('text_size'))
         self.left_layout.add_widget(self.app_banner)
+
+        # Screen selection
+        self.left_layout.add_widget(self._screen_selection_layout())
         
         # File selection
         self.left_layout.add_widget(self._file_selection_layout())
@@ -94,10 +112,40 @@ class UVSimUI(GridLayout):
         # self.left_layout.add_widget(self._log_button())
 
         return self.left_layout
+    
+    # Screen selection layout with spinner (dropdown menu) and button to add a new screen
+    def _screen_selection_layout(self) -> BoxLayout:
+        self.screen_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=(10, 5))
+        self.screen_label = Label(text="Tabs:", size_hint_x=0.08 , color=hex_to_rgba(self.color_scheme.colors["text"]))
+        self.screen_layout.add_widget(self.screen_label)
+        self.screen_spinner = Spinner(text=self.name, values=[], size_hint=(0.5, 0.6), pos_hint={'center_x': 0.5, 'center_y': 0.5}, background_color=hex_to_rgba(self.color_scheme.colors["primary"]))
+        self.screen_layout.add_widget(self.screen_spinner)
+        self.add_screen_btn = Button(text="New Tab+", size_hint_x=0.2)
+        self.screen_layout.add_widget(self.add_screen_btn)
+
+        # Bind the spinner selection to the running app's screen changer function and button to add a new screen
+        self.screen_spinner.bind(text=self.on_spinner_select)
+        self.add_screen_btn.bind(on_release=self.add_new_screen)
+
+        return self.screen_layout
+    
+    # Spinner selection handler to change the screen
+    def on_spinner_select(self, spinner, text):
+        # The attribute 'self.manager' is part of the Screen class, which returns the ScreenManager instance that manages this screen.
+        self.manager.get_screen(text).screen_spinner.text = text
+        self.manager.current = text
+
+    # Function to update the spinner with the current screen names
+    def update_screen_spinner(self, screen_names):
+        self.screen_spinner.values = screen_names
+
+    # New tab button handler to add a new screen to the app
+    def add_new_screen(self, instance):
+        App.get_running_app().add_new_screen()
 
     # File selection layout (File input, Select file button)
     def _file_selection_layout(self) -> BoxLayout:
-        self.file_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=13, padding=(10, 5))
+        self.file_layout = BoxLayout(orientation='horizontal', size_hint_y=0.25, spacing=13, padding=(10, 5))
         self.file_layout.add_widget(Label(text="File:", size_hint_x=0.08, color=hex_to_rgba(self.color_scheme.colors["text"])))
         self.file_text_input = TextInput(text="", hint_text="Enter file name here, or select file:", multiline = False, size_hint=(0.5, 0.6), pos_hint={'center_x': 0.5, 'center_y': 0.5})
         self.file_layout.add_widget(self.file_text_input)
@@ -135,6 +183,7 @@ class UVSimUI(GridLayout):
         if len(self.file_chooser.selection) == 0:
             self.file_text_input.text = ""
         else:
+            self.file = self.file_chooser.selection[0]
             self.file_text_input.text = os.path.join(self.file_chooser.path, self.file_chooser.selection[0])
         self.popup.dismiss()
         self.file_handler(None)
@@ -155,6 +204,9 @@ class UVSimUI(GridLayout):
             self.file_text_input.hint_text = "File loaded successfully!"
             self.file_text_input.disabled = True
             self.select_file_btn.disabled = True
+            self.name = os.path.basename(selection)
+            self.screen_spinner.text = self.name
+            App.get_running_app().update_all_spinners()
             return 0
         else:
             return -1
@@ -254,7 +306,7 @@ class UVSimUI(GridLayout):
 
     # Program counter layout
     def _program_counter_layout(self) ->BoxLayout:
-        self.pc_layout = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=0, padding=(20, 0))
+        self.pc_layout = BoxLayout(orientation='vertical', size_hint_y=0.3, spacing=0, padding=(20, 0))
         self.pc_label = Label(text="Program Counter:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
         self.pc_label.bind(size=self.pc_label.setter('text_size'))
         self.pc_field = TextInput(text="Program Not Started", readonly=True, size_hint_y=0.4, padding=(20, 10))
@@ -268,7 +320,7 @@ class UVSimUI(GridLayout):
         
     # Accumulator layout
     def _accumulator_layout(self) -> BoxLayout:
-        self.accumulator_layout = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=0, padding=(20, 0))
+        self.accumulator_layout = BoxLayout(orientation='vertical', size_hint_y=0.3, spacing=0, padding=(20, 0))
         self.accumulator_label = Label(text="Accumulator:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
         self.accumulator_label.bind(size=self.accumulator_label.setter('text_size'))
         self.accumulator_field = TextInput(text="No value in accumulator...", readonly=True, size_hint_y=0.4, padding=(20, 10))
@@ -285,7 +337,7 @@ class UVSimUI(GridLayout):
         self.console_in_layout = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=0, padding=(20, 0))
         self.console_label = Label(text="Console Input:", size_hint_y=0.4, font_size=30, halign='left', valign='middle', padding=(40, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
         self.console_label.bind(size=self.console_label.setter('text_size'))
-        self.console_input = TextInput(multiline=False, size_hint_y=0.4, padding=(20, 10), disabled=True)
+        self.console_input = TextInput(multiline=False, size_hint_y=0.5, padding=(20, 10), disabled=True)
         self.console_input.bind(on_text_validate=self.input_text_handler)
         self.console_in_layout.add_widget(self.console_label)
         self.console_in_layout.add_widget(self.console_input)
@@ -309,7 +361,7 @@ class UVSimUI(GridLayout):
     # Console Output layout
     def _console_output_layout(self) -> BoxLayout:
         self.console_out_layout = BoxLayout(orientation='vertical', spacing=10, padding=(20, 10))
-        self.console_label = Label(text="Console Output:", size_hint_y=0.08, font_size=30, halign='left', valign='middle', padding=(40, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
+        self.console_label = Label(text="Console Output:", size_hint_y=0.15, font_size=30, halign='left', valign='middle', padding=(40, 0), color=hex_to_rgba(self.color_scheme.colors["text"]))
         self.console_label.bind(size=self.console_label.setter('text_size'))
         self.console_scroller = ScrollView(bar_color=(0.2, 0.2, 0.2, 1), bar_width=10)
         self.console_output = TextInput(text="Welcome to UVSim!\nPlease load a file, then press Execute or Step to run.\n", multiline=True, readonly=True, size_hint=(1, None), padding=(10, 5))
@@ -354,10 +406,10 @@ class UVSimUI(GridLayout):
     # Table header (Location, Word)
     def _table_header(self) -> GridLayout:
         self.table_header = GridLayout(cols=2, size_hint=(1, 0.15), spacing=2, padding=(15, 10))
-        loc = Button(text="Location", disabled = True, background_color = (0.8, 0.8, 0.8, 1))
+        loc = Button(text="Location", disabled = True, background_color=hex_to_rgba(self.color_scheme.colors["primary"]))
         loc.background_disabled_normal = ""
         loc.disabled_color = (0, 0, 0, 1)
-        word = Button(text="Word", disabled = True, background_color = (0.8, 0.8, 0.8, 1))
+        word = Button(text="Word", disabled = True, background_color=hex_to_rgba(self.color_scheme.colors["primary"]))
         word.background_disabled_normal = ""
         word.disabled_color = (0, 0, 0, 1)
         self.table_header.add_widget(loc)
@@ -388,7 +440,9 @@ class UVSimUI(GridLayout):
                 # background_color=(0.8, 0.8, 0.8, 1) if is_current else (0.8, 0.8, 0.8, 1)
                 background_color=hex_to_rgba(self.color_scheme.colors["primary"]) if is_current else hex_to_rgba(self.color_scheme.colors["secondary"]), 
                 disabled_color=hex_to_rgba(self.color_scheme.colors["text"]),
-                #background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1)
+                #background_color=(1, 1, 0.6, 0.7) if is_current else (0.8, 0.8, 0.8, 1),
+                size_hint_y=None,
+                height=30
             )
             loc.disabled_color = (0, 0, 0, 1)
             loc.background_disabled_normal = ""
@@ -434,6 +488,10 @@ class UVSimUI(GridLayout):
     
     # Reset button functionality to reset the app and GUI to original states
     def reset_handler(self, instance):
+
+        self.name = self.original_name
+        self.screen_spinner.text = self.name
+        App.get_running_app().update_all_spinners()
 
         self.file_text_input.text = ""
         self.file_text_input.hint_text = "Enter file name here, or select file:"
