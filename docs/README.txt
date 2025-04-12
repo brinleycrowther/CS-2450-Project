@@ -44,6 +44,8 @@ GUI Usage Guide:
 - Quit Button: Exit application
 - Accumulator value displayed below controls
 - Reset App Button: Resets program for additional use (Available once a file has run to completion).
+- Settings: Set the app color scheme
+- Edit File: Change words from input file
 6. Run Another Program:
 - Select "New Tab+"
 - Switch between files by selecting the black tabs box for drop down menu
@@ -57,10 +59,15 @@ Example GUI Session:
 5. When READ operation occurs:
    - Type input value in Console Input
    - Press Enter to continue
-6. View results in Console Output
+6. View results in Console Output.
 7. Click "Save" to export state when finished
 8. Click Reset App to run program again.
 9. Click Quit to exit.
+	- OR -
+8. Click "Edit File".
+9. Make edits to words and click "Save".
+10. Click "Execute".
+11. Click "Quit" to exit.
 
 Key Features:
 - Graphical memory table with real-time updates
@@ -79,13 +86,13 @@ File Requirements
 3. Maximum 250 lines
 
 Example Valid File:
-+001007  & +100007 # READ to 07
-+001008  & +100008 # READ to 08
-+002007  & +200007 # LOAD from 07
-+003008  & +300008 # ADD from 08
-+002109 & +210009 # STORE to 09
-+001109  & +110009 # WRITE from 09
-+004300  & +430000 # HALT
++010007  & +100007 # READ to 07
++010008  & +100008 # READ to 08
++020007  & +200007 # LOAD from 07
++030008  & +300008 # ADD from 08
++021009 & +210009 # STORE to 09
++011009  & +110009 # WRITE from 09
++043000  & +430000 # HALT
 
 Troubleshooting
 - Blank window: Verify Kivy installation
