@@ -11,6 +11,8 @@ from kivy.uix.filechooser import FileChooserIconView
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.spinner import Spinner
+from kivy.clock import Clock
+from kivy.graphics import Color, Rectangle
 # from threading import Thread
 import os
 from color_scheme import ColorScheme, ColorConfigPopup
@@ -65,6 +67,8 @@ class UVSimUI(Screen):
             self.quit_btn.background_color = hex_to_rgba(self.color_scheme.colors["primary"])
         if hasattr(self, 'settings_btn'):
             self.settings_btn.background_color = hex_to_rgba(self.color_scheme.colors["primary"])
+        if hasattr(self, 'edit_file_btn'):
+            self.edit_file_btn.background_color = hex_to_rgba(self.color_scheme.colors["primary"])
 
         # Update memory table colors
         if hasattr(self, 'memory_table'):
@@ -215,18 +219,21 @@ class UVSimUI(Screen):
         self.save_btn = Button(text="Save", background_color=hex_to_rgba(self.color_scheme.colors["primary"]))
         self.quit_btn = Button(text="Quit", background_color=hex_to_rgba(self.color_scheme.colors["primary"]))
         self.settings_btn = Button(text="Settings", background_color=hex_to_rgba(self.color_scheme.colors["primary"]))
+        self.edit_file_btn = Button(text="Edit File", background_color=hex_to_rgba(self.color_scheme.colors["primary"]))
         
         self.control_btn_layout.add_widget(self.execute_btn)
         self.control_btn_layout.add_widget(self.step_btn)
         self.control_btn_layout.add_widget(self.save_btn)
         self.control_btn_layout.add_widget(self.quit_btn)
         self.control_btn_layout.add_widget(self.settings_btn)
+        self.control_btn_layout.add_widget(self.edit_file_btn)
 
         self.execute_btn.bind(on_release=self.execute_handler)
         self.step_btn.bind(on_release = self.step_handler)
         self.save_btn.bind(on_release = self._popup_save_file)
         self.quit_btn.bind(on_release=self.quit_handler)
         self.settings_btn.bind(on_release=self.show_color_config)
+        self.edit_file_btn.bind(on_release=self.open_file_editor)
 
         return self.control_btn_layout
 
@@ -262,6 +269,7 @@ class UVSimUI(Screen):
     def execute_handler(self, instance):
         if self.file_text_input.disabled == True:
             self.simulator.wordProcess(False)
+            self.edit_file_btn.disabled = True
         else:
             self.simulator.update_console("No file loaded. Please load a file before executing.")
         return 0
@@ -270,6 +278,7 @@ class UVSimUI(Screen):
     def step_handler(self, instance):
         if self.file_text_input.disabled == True:
             self.simulator.wordProcess(True)
+            self.edit_file_btn.disabled = True
         else:
             self.simulator.update_console("No file loaded. Please load a file before stepping.")
         return 0
@@ -438,17 +447,13 @@ class UVSimUI(Screen):
             loc.disabled_color = (0, 0, 0, 1)
             loc.background_disabled_normal = ""
 
-            # Word input is editable
-            word = SimTextInput(
+            word = Button(
                 text=value,
-                multiline=False,
-                foreground_color=hex_to_rgba(self.color_scheme.colors["text"]),
-                text_key=key,
-                background_color=hex_to_rgba(self.color_scheme.colors["primary"]) if is_current else hex_to_rgba(self.color_scheme.colors["secondary"])
+                disabled=True,
+                background_color=hex_to_rgba(self.color_scheme.colors["primary"]) if is_current else hex_to_rgba(self.color_scheme.colors["secondary"]), 
+                disabled_color=hex_to_rgba(self.color_scheme.colors["text"]),
             )
-
             word.disabled_color = hex_to_rgba(self.color_scheme.colors["text"])
-            #word.disabled_color = (0, 0, 0, 1)
             word.background_disabled_normal = ""
 
             # Bind validation function
@@ -496,6 +501,7 @@ class UVSimUI(Screen):
         self.select_file_btn.unbind(on_release = self.reset_handler)
         self.select_file_btn.bind(on_release = self._popup_file_chooser)
         self.select_file_btn.disabled = False
+        self.edit_file_btn.disabled = False
 
         self.console_input.text = ""
         self.console_input.disabled = True
@@ -509,7 +515,111 @@ class UVSimUI(Screen):
         self.refresh_memory_table(0)
 
         return 0
-        
+    
+    def open_file_editor(self, *args):
+        if self.select_file_btn.disabled == False:
+            popup = Popup(title="No Program Loaded",
+                        content=Label(text="Please load a file first."),
+                        size_hint=(0.5, 0.3))
+            popup.open()
+            return
+
+        popup_layout = BoxLayout(orientation='vertical', spacing=10, padding=10)
+        popup_layout.canvas.before.clear()
+
+        with popup_layout.canvas.before:
+            Color(*hex_to_rgba(self.color_scheme.colors["primary"]))
+            self.popup_bg_rect = Rectangle(size=popup_layout.size, pos=popup_layout.pos)
+
+        popup_layout.bind(size=lambda *_: setattr(self.popup_bg_rect, 'size', popup_layout.size))
+        popup_layout.bind(pos=lambda *_: setattr(self.popup_bg_rect, 'pos', popup_layout.pos))
+
+        scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False, do_scroll_y=True)
+
+
+        memory_input = TextInput(
+            text=self.simulator.original_file_content,
+            multiline=True,
+            font_size=20,
+            foreground_color=hex_to_rgba(self.color_scheme.colors["text"]),
+            background_color=hex_to_rgba(self.color_scheme.colors["secondary"]),
+            cursor_color=(0, 0, 0, 1),
+            size_hint_y=None,
+            height=2000,
+        )
+
+        scroll.add_widget(memory_input)
+
+        button_row = BoxLayout(orientation='horizontal', size_hint_y=None, height=40, spacing=10)
+
+        save_btn = Button(
+            text='Save',
+            background_color=hex_to_rgba(self.color_scheme.colors["secondary"]),
+            color=(1, 1, 1, 1)
+        )
+
+        close_btn = Button(
+            text='Close',
+            background_color=hex_to_rgba(self.color_scheme.colors["secondary"]),
+            color=(1, 1, 1, 1)
+        )
+
+        button_row.add_widget(save_btn)
+        button_row.add_widget(close_btn)
+
+        def save_memory(instance):
+            new_lines = memory_input.text.strip().splitlines()
+            new_memory = {}
+
+            for i in range(len(self.simulator.memory)):
+                if i < len(new_lines):
+                    line = new_lines[i].strip()
+                    if len(line) >= 4:
+                        converted = self.convert_to_six_digts(line)
+                        if len(converted) == 7 and (converted[0] in "+-") and converted[1:].isdigit():
+                            new_memory[i] = converted
+                        else:
+                            new_memory[i] = "+000000"
+                    else:
+                        new_memory[i] = "+000000"
+                else:
+                    new_memory[i] = "+000000"
+
+            self.simulator.memory = new_memory
+            self.memory = new_memory.copy()
+            self.simulator.original_file_content = "\n".join(new_memory[i] for i in range(len(self.simulator.memory)))
+
+            self.refresh_memory_table()
+            popup.dismiss()
+
+        save_btn.bind(on_release=save_memory)
+        close_btn.bind(on_release=lambda x: popup.dismiss())
+
+        popup_layout.add_widget(scroll)
+        popup_layout.add_widget(button_row)
+
+        popup = Popup(title='Edit File Contents', content=popup_layout, size_hint=(0.9, 0.9))
+        popup.open()
+
+        #Scroll to top after popup is open
+        def scroll_to_top(dt):
+            memory_input.cursor = (0, 0)
+            memory_input.scroll_y = 1.0
+
+        Clock.schedule_once(scroll_to_top, 0.1)
+
+    def convert_to_six_digts(self, word):
+        """Converts 4-digit words to 6-digit format."""
+        has_sign = len(word) > 0 and word[0] in '+-'
+        if (has_sign and len(word) == 5) or (not has_sign and len(word) == 4):
+            sign = word[0] if has_sign else '+'
+            digits = word[1:] if has_sign else word
+            digits = digits.ljust(4, '0')[:4]  # Ensure 4 digits, pad if needed
+            opcode = digits[:2].zfill(3)       # First two digits as opcode, pad to 3
+            address = digits[2:].zfill(3)      # Last two as address, pad to 3
+            return f"{sign}{opcode}{address}"
+        return word
+
 """
 class UVSimApp(App):
     def build(self):
